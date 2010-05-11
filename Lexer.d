@@ -222,7 +222,7 @@ bool lexLiteral(Source src, LexErr err, out Token token)
                 return false;
             }
 
-            token = Token(src.locationFromMark(mark),
+            token = Token(src.locFrom(mark),
                     TOKlet, src.sliceFrom(mark));
             return true;
 
@@ -236,7 +236,7 @@ bool lexLiteral(Source src, LexErr err, out Token token)
                 return false;
             }
 
-            token = Token(src.locationFromMark(mark),
+            token = Token(src.locFrom(mark),
                     TOKuniform, src.sliceFrom(mark));
             return true;
 
@@ -308,7 +308,7 @@ bool lexIdentifier(Source src, LexErr err, out Token token)
             ++ l;
         }
 
-    token = Token(src.locationFromMark(mark),
+    token = Token(src.locFrom(mark),
             TOKidentifier, src.sliceFrom(mark));
     return true;
 }

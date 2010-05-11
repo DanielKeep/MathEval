@@ -164,7 +164,7 @@ final class Source
         this.mark = mark;
     }
 
-    Location locationFromMark(Mark mark)
+    Location locFrom(Mark mark)
     {
         Location r;
         r.file = name;
