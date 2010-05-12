@@ -4,10 +4,11 @@ import tango.text.convert.Format;
 import tango.text.Unicode : isWhitespace, isSpace, isDigit, isLetter,
        isLetterOrDigit;
 
+import Location : LocErr;
 import Source : Source;
 import Tokens; // Token, TOKx, ...
 
-alias void delegate(Location, char[], ...) LexErr;
+alias LocErr LexErr;
 
 void skipWhitespace(Source src, LexErr err)
 {
@@ -309,7 +310,7 @@ bool lexIdentifier(Source src, LexErr err, out Token token)
         }
 
     token = Token(src.locFrom(mark),
-            TOKidentifier, src.sliceFrom(mark));
+            TOKident, src.sliceFrom(mark));
     return true;
 }
 

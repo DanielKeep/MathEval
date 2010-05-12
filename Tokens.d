@@ -40,7 +40,7 @@ const char[][] LiteralTokens =
 const char[][] OtherTokens =
 [
     "number",
-    "identifier",
+    "ident",
     "eol",
     "eos",
 ];
@@ -62,7 +62,7 @@ mixin(generateTokens_ctfe(__FILE__, __LINE__,
 struct Token
 {
     Location loc;
-    TOK type;
+    TOK type = TOKnone;
     char[] text;
 
     static Token opCall(Location loc, TOK type, char[] text)

@@ -2,6 +2,19 @@ module Ast;
 
 import Location;
 
+const char[][] AstNodeNames =
+[
+    "AstScript",
+    "AstLetStmt",
+    "AstExprStmt",
+    "AstNumberExpr",
+    "AstUniformExpr",
+    "AstBinaryExpr",
+    "AstUnaryExpr",
+    "AstVariableExpr",
+    "AstFunctionExpr",
+];
+
 abstract class AstNode
 {
     Location loc;
@@ -14,16 +27,16 @@ abstract class AstNode
 
 class AstScript : AstNode
 {
-    AstStatement[] stmts;
+    AstStmt[] stmts;
 
-    this(Location loc, AstStatement[] stmts)
+    this(Location loc, AstStmt[] stmts)
     {
         super(loc);
         this.stmts = stmts;
     }
 }
 
-abstract class AstStatement : AstNode
+abstract class AstStmt : AstNode
 {
     this(Location loc)
     {
@@ -31,7 +44,7 @@ abstract class AstStatement : AstNode
     }
 }
 
-class AstLetStatement : AstStatement
+class AstLetStmt : AstStmt
 {
     char[] ident;
     AstExpr expr;
@@ -47,7 +60,7 @@ class AstLetStatement : AstStatement
     }
 }
 
-class AstExprStatement : AstStatement
+class AstExprStmt : AstStmt
 {
     AstExpr expr;
 
@@ -125,6 +138,27 @@ class AstBinaryExpr : AstExpr
         this.lhs = lhs;
         this.rhs = rhs;
     }
+
+    static char[] opToString(Op op)
+    {
+        switch( op )
+        {
+            case Op.Eq:     return "Eq";
+            case Op.NotEq:  return "NotEq";
+            case Op.Lt:     return "Lt";
+            case Op.LtEq:   return "LtEq";
+            case Op.Gt:     return "Gt";
+            case Op.GtEq:   return "GtEq";
+            case Op.Add:    return "Add";
+            case Op.Sub:    return "Sub";
+            case Op.Mul:    return "Mul";
+            case Op.Div:    return "Div";
+            case Op.IntDiv: return "IntDiv";
+            case Op.Exp:    return "Exp";
+
+            default:        assert(false);
+        }
+    }
 }
 
 class AstUnaryExpr : AstExpr
@@ -145,6 +179,17 @@ class AstUnaryExpr : AstExpr
         super(loc);
         this.op = op;
         this.expr = expr;
+    }
+
+    static char[] opToString(Op op)
+    {
+        switch( op )
+        {
+            case Op.Pos:    return "Pos";
+            case Op.Neg:    return "Neg";
+
+            default:        assert(false);
+        }
     }
 }
 
