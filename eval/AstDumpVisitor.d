@@ -1,8 +1,7 @@
-module AstDumpVisitor;
+module eval.AstDumpVisitor;
 
-import Ast;
-import VisitorCtfe;
-import StructuredOutput;
+import eval.Ast;
+import eval.StructuredOutput;
 
 class AstDumpVisitor
 {
@@ -13,7 +12,29 @@ class AstDumpVisitor
         this.so = so;
     }
 
-    mixin(visitorDispatch_ctfe("AstNode", AstNodeNames, "void"));
+    void visitBase(AstNode node)
+    {
+        if( auto stn = cast(AstScript) node )
+            return visit(stn);
+        if( auto stn = cast(AstLetStmt) node )
+            return visit(stn);
+        if( auto stn = cast(AstExprStmt) node )
+            return visit(stn);
+        if( auto stn = cast(AstNumberExpr) node )
+            return visit(stn);
+        if( auto stn = cast(AstBinaryExpr) node )
+            return visit(stn);
+        if( auto stn = cast(AstUnaryExpr) node )
+            return visit(stn);
+        if( auto stn = cast(AstVariableExpr) node )
+            return visit(stn);
+        if( auto stn = cast(AstFunctionExpr) node )
+            return visit(stn);
+        if( auto stn = cast(AstUniformExpr) node )
+            return visit(stn);
+
+        return defaultVisit(node);
+    }
 
     void defaultVisit(AstNode node)
     {
@@ -66,12 +87,6 @@ class AstDumpVisitor
         so.f("{}", node.value);
     }
 
-    void visit(AstUniformExpr node)
-    {
-        so.f("(uniform {} {} {} {})",
-                node.li, node.l, node.u, node.ui);
-    }
-
     void visit(AstBinaryExpr node)
     {
         so
@@ -113,6 +128,20 @@ class AstDumpVisitor
                 }
                 visitBase(node.args[$-1]);
             })
+            .pl(")")
+            .pop
+        ;
+    }
+
+    void visit(AstUniformExpr node)
+    {
+        so
+            .pl("(uniform")
+            .push
+            .f("{} ", node.li ? "inclusive" : "exclusive")
+            .seq({ visitBase(node.le); }).l()
+            .f("{} ", node.ui ? "inclusive" : "exclusive")
+            .seq({ visitBase(node.ue); })
             .pl(")")
             .pop
         ;

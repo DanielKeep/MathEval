@@ -5,14 +5,14 @@ import tango.io.Console;
 import tango.io.Stdout;
 import tango.text.convert.Format;
 
-import Ast;
-import AstDumpVisitor;
-import Parser;
-import Lexer;
-import Location;
-import Source;
-import StructuredOutput;
-import TokenStream;
+import eval.Ast;
+import eval.AstDumpVisitor;
+import eval.Parser;
+import eval.Lexer;
+import eval.Location;
+import eval.Source;
+import eval.StructuredOutput;
+import eval.TokenStream;
 
 class Stop : Exception
 {
@@ -41,7 +41,8 @@ int main(char[][] argv)
 
     void parseError(Location loc, char[] fmt, ...)
     {
-        Stderr(Format.convert(_arguments, _argptr, fmt)).newline;
+        Stderr(loc.toString)(": ")
+            (Format.convert(_arguments, _argptr, fmt)).newline;
         throw new Stop;
     }
     
@@ -49,7 +50,7 @@ int main(char[][] argv)
 
     try
     {
-        scope ts = new TokenStream(new Source("stdin", src),
+        scope ts = new TokenStream(new Source("cmdline", src),
                 &lexNext, &parseError);
         script = parseScript(ts);
     }

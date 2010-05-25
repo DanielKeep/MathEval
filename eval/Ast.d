@@ -1,6 +1,6 @@
-module Ast;
+module eval.Ast;
 
-import Location;
+import eval.Location;
 
 const char[][] AstNodeNames =
 [
@@ -8,11 +8,11 @@ const char[][] AstNodeNames =
     "AstLetStmt",
     "AstExprStmt",
     "AstNumberExpr",
-    "AstUniformExpr",
     "AstBinaryExpr",
     "AstUnaryExpr",
     "AstVariableExpr",
     "AstFunctionExpr",
+    "AstUniformExpr",
 ];
 
 abstract class AstNode
@@ -92,21 +92,6 @@ class AstNumberExpr : AstExpr
     }
 }
 
-class AstUniformExpr : AstExpr
-{
-    real l, u;
-    bool li, ui;
-
-    this(Location loc, real l, real u, bool li, bool ui)
-    {
-        super(loc);
-        this.l = l;
-        this.u = u;
-        this.li = li;
-        this.ui = ui;
-    }
-}
-
 class AstBinaryExpr : AstExpr
 {
     enum Op
@@ -123,6 +108,8 @@ class AstBinaryExpr : AstExpr
         Div,
         IntDiv,
         Exp,
+        And,
+        Or,
     }
 
     Op op;
@@ -155,6 +142,8 @@ class AstBinaryExpr : AstExpr
             case Op.Div:    return "Div";
             case Op.IntDiv: return "IntDiv";
             case Op.Exp:    return "Exp";
+            case Op.And:    return "And";
+            case Op.Or:     return "Or";
 
             default:        assert(false);
         }
@@ -167,6 +156,7 @@ class AstUnaryExpr : AstExpr
     {
         Pos,
         Neg,
+        Not,
     }
 
     Op op;
@@ -187,6 +177,7 @@ class AstUnaryExpr : AstExpr
         {
             case Op.Pos:    return "Pos";
             case Op.Neg:    return "Neg";
+            case Op.Not:    return "Not";
 
             default:        assert(false);
         }
@@ -219,6 +210,22 @@ class AstFunctionExpr : AstExpr
         super(loc);
         this.ident = ident;
         this.args = args;
+    }
+}
+
+class AstUniformExpr : AstExpr
+{
+    bool li, ui;
+    AstExpr le, ue;
+
+    this(Location loc, bool li, bool ui, AstExpr le, AstExpr ue)
+    {
+        super(loc);
+
+        this.li = li;
+        this.ui = ui;
+        this.le = le;
+        this.ue = ue;
     }
 }
 

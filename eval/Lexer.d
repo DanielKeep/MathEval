@@ -1,12 +1,12 @@
-module Lexer;
+module eval.Lexer;
 
 import tango.text.convert.Format;
 import tango.text.Unicode : isWhitespace, isSpace, isDigit, isLetter,
        isLetterOrDigit;
 
-import Location : LocErr;
-import Source : Source;
-import Tokens; // Token, TOKx, ...
+import eval.Location : Location, LocErr;
+import eval.Source : Source;
+import eval.Tokens; // Token, TOKx, ...
 
 alias LocErr LexErr;
 
@@ -213,6 +213,20 @@ bool lexLiteral(Source src, LexErr err, out Token token)
     // substrings.
     switch( cp0 )
     {
+        case 'a':
+            mark = src.save;
+            src.advance;
+            tail = src.advance("nd".length);
+            if( isIdent(src[0]) || tail != "nd" )
+            {
+                src.restore(mark);
+                return false;
+            }
+
+            token = Token(src.locFrom(mark),
+                    TOKand, src.sliceFrom(mark));
+            return true;
+
         case 'l':
             mark = src.save;
             src.advance;
@@ -225,6 +239,34 @@ bool lexLiteral(Source src, LexErr err, out Token token)
 
             token = Token(src.locFrom(mark),
                     TOKlet, src.sliceFrom(mark));
+            return true;
+
+        case 'n':
+            mark = src.save;
+            src.advance;
+            tail = src.advance("ot".length);
+            if( isIdent(src[0]) || tail != "ot" )
+            {
+                src.restore(mark);
+                return false;
+            }
+
+            token = Token(src.locFrom(mark),
+                    TOKnot, src.sliceFrom(mark));
+            return true;
+
+        case 'o':
+            mark = src.save;
+            src.advance;
+            tail = src.advance("r".length);
+            if( isIdent(src[0]) || tail != "r" )
+            {
+                src.restore(mark);
+                return false;
+            }
+
+            token = Token(src.locFrom(mark),
+                    TOKor, src.sliceFrom(mark));
             return true;
 
         case 'u':
@@ -455,10 +497,8 @@ struct LexIter
             if( !f )
                 err(src.loc, "unexpected '{}'", src[0]);
 
-            if( token.type == TOKeos )
-                break;
             r = dg(token);
-            if( r )
+            if( r || token.type == TOKeos )
                 break;
         }
 

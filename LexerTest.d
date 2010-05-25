@@ -2,7 +2,7 @@ module LexerTest;
 
 import tango.core.tools.TraceExceptions;
 import tango.io.Stdout;
-import Lexer;
+import eval.Lexer;
 
 int main(char[][] argv)
 {
@@ -21,7 +21,7 @@ int main(char[][] argv)
 
     try
     {
-        foreach( token ; lexIter("stdin", src) )
+        foreach( token ; lexIter("cmdline", src) )
         {
             Stdout(token).newline;
         }

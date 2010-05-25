@@ -1,4 +1,4 @@
-module TokensCtfe;
+module eval.TokensCtfe;
 
 char[] generateTokens_ctfe
 (

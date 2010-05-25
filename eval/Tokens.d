@@ -1,11 +1,11 @@
-module Tokens;
+module eval.Tokens;
 
 import tango.text.convert.Format;
-import Location;
+import eval.Location;
 
 private
 {
-    import TokensCtfe : generateTokens_ctfe;
+    import eval.TokensCtfe : generateTokens_ctfe;
 }
 
 const char[][2][] SymbolTokens =
@@ -33,7 +33,10 @@ const char[][2][] SymbolTokens =
 
 const char[][] LiteralTokens =
 [
+    "and",
     "let",
+    "not",
+    "or",
     "uniform",
 ];
 

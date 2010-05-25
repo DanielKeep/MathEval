@@ -1,9 +1,9 @@
-module Parser;
+module eval.Parser;
 
 import Float = tango.text.convert.Float;
-import Ast;
-import Tokens;
-import TokenStream;
+import eval.Ast;
+import eval.Tokens;
+import eval.TokenStream;
 
 AstScript parseScript(TokenStream ts)
 {
@@ -76,6 +76,8 @@ float precOf(AstBinaryExpr.Op op)
 
     switch( op )
     {
+        case Op.Or:         return 3.8;
+        case Op.And:        return 3.9;
         case Op.Eq:         return 4.0;
         case Op.NotEq:      return 4.0;
         case Op.Lt:         return 4.0;
@@ -137,7 +139,7 @@ struct ExprState
     {
         assert( ops.length >= 1 );
         assert( exprs.length >= 2 );
-        assert( ops.length == exprs.length+1 );
+        assert( ops.length == exprs.length-1 );
 
         auto op = ops[$-1];
         ops = ops[0..$-1];
@@ -146,7 +148,7 @@ struct ExprState
         auto rhs = exprs[$-1];
         exprs = exprs[0..$-1]; // pop 2, push 1
 
-        exprs[$-2] = foldBinaryOp(op.op, lhs, rhs);
+        exprs[$-1] = foldBinaryOp(op.op, lhs, rhs);
     }
 
     AstExpr force()
@@ -175,18 +177,21 @@ AstExpr parseExpr(TokenStream ts)
     - subexpression
     */
 
-    AstExpr lhs;
+    AstExpr tryparseAtom()
+    {
+        if( auto e = tryparseNumberExpr(ts) )   return e;
+        if( auto e = tryparseUnaryExpr(ts) )    return e;
+        if( auto e = tryparseFunctionExpr(ts) ) return e;
+        if( auto e = tryparseVariableExpr(ts) ) return e;
+        if( auto e = tryparseUniformExpr(ts) )  return e;
+        if( auto e = tryparseSubExpr(ts) )      return e;
+        return null;
+    }
 
-    lhs = tryparseNumberExpr(ts);   if( lhs !is null ) goto gotLhs;
-    lhs = tryparseUnaryExpr(ts);    if( lhs !is null ) goto gotLhs;
-    lhs = tryparseFunctionExpr(ts); if( lhs !is null ) goto gotLhs;
-    lhs = tryparseVariableExpr(ts); if( lhs !is null ) goto gotLhs;
-    lhs = tryparseUniformExpr(ts);  if( lhs !is null ) goto gotLhs;
-    lhs = tryparseSubExpr(ts);      if( lhs !is null ) goto gotLhs;
+    auto lhs = tryparseAtom();
 
-    ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
-
-gotLhs:
+    if( lhs is null )
+        ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
 
     /*
     Now we need to parse the chain of infix operators.
@@ -196,14 +201,14 @@ gotLhs:
     {
         ExprState st;
         st.pushExpr(lhs);
+        st.pushOp(op);
 
         while( true )
         {
+            st.pushExpr(tryparseAtom());
+
             if( tryparseBinaryOp(ts, op) )
-            {
                 st.pushOp(op);
-                st.pushExpr(parseExpr(ts));
-            }
             else
                 break;
         }
@@ -215,13 +220,18 @@ gotLhs:
         return lhs;
 }
 
-AstNumberExpr tryparseNumberExpr(TokenStream ts)
+AstExpr tryparseNumberExpr(TokenStream ts)
 {
     if( ts.peek.type != TOKnumber ) return null;
 
     auto loc = ts.peek.loc;
     real value = parseReal(ts);
-    return new AstNumberExpr(loc, value);
+    auto expr = new AstNumberExpr(loc, value);
+
+    if( auto var = tryparseVariableExpr(ts) )
+        return new AstBinaryExpr(loc, AstBinaryExpr.Op.Mul, expr, var);
+    else
+        return expr;
 }
 
 AstVariableExpr tryparseVariableExpr(TokenStream ts)
@@ -268,6 +278,7 @@ AstUnaryExpr tryparseUnaryExpr(TokenStream ts)
     {
         case TOKplus:       op = Op.Pos;    break;
         case TOKhyphen:     op = Op.Neg;    break;
+        case TOKnot:        op = Op.Not;    break;
 
         default:            return null;
     }
@@ -277,18 +288,6 @@ AstUnaryExpr tryparseUnaryExpr(TokenStream ts)
 
     return new AstUnaryExpr(loc, op, expr);
 }
-
-/+
-AstBinaryExpr.Op parseBinaryOp(TokenStream ts)
-{
-    AstBinaryExpr.Op op;
-    if( !tryparseBinaryOp(ts, op) )
-        ts.err(ts.src.loc, "expected binary operator, got '{}'",
-                ts.peek.text);
-
-    return op;
-}
-+/
 
 bool tryparseBinaryOp(TokenStream ts, out AstBinaryExpr.Op op)
 {
@@ -311,6 +310,8 @@ bool tryparseBinaryOp(TokenStream ts, out AstBinaryExpr.Op op)
         case TOKslash:      op = Op.Div;    break;
         case TOKslashslash: op = Op.IntDiv; break;
         case TOKstarstar:   op = Op.Exp;    break;
+        case TOKand:        op = Op.And;    break;
+        case TOKor:         op = Op.Or;     break;
 
         default:            return false;
     }
@@ -319,28 +320,21 @@ bool tryparseBinaryOp(TokenStream ts, out AstBinaryExpr.Op op)
     return true;
 }
 
-/+
-AstBinaryExpr tryparseFactorExpr(TokenStream ts)
-{
-    assert(false, "nyi");
-}
-+/
-
 AstUniformExpr tryparseUniformExpr(TokenStream ts)
 {
     if( ts.peek.type != TOKuniform ) return null;
 
     auto loc = ts.pop.loc;
-    real l, u;
+    AstExpr le, ue;
     bool li, ui;
 
     li = (ts.popExpectAny(TOKlparen,TOKlbracket).type == TOKlbracket);
-    l = parseReal(ts);
+    le = parseExpr(ts);
     ts.popExpect(TOKcomma);
-    u = parseReal(ts);
+    ue = parseExpr(ts);
     ui = (ts.popExpectAny(TOKrparen,TOKrbracket).type == TOKrbracket);
 
-    return new AstUniformExpr(loc, l, u, li, ui);
+    return new AstUniformExpr(loc, li, ui, le, ue);
 }
 
 real parseReal(TokenStream ts)
@@ -353,6 +347,7 @@ AstExpr tryparseSubExpr(TokenStream ts)
 {
     if( ts.peek.type != TOKlparen ) return null;
 
+    ts.pop();
     auto expr = parseExpr(ts);
     ts.popExpect(TOKrparen);
     return expr;
@@ -362,20 +357,21 @@ AstExpr foldBinaryOp(AstBinaryExpr.Op op, AstExpr lhs, AstExpr rhs)
 {
     alias AstBinaryExpr.Op Op;
 
-    // TODO: need to add logical operators, then enable this:
-    /+
-    if( auto lhsBin = cast(AstBinaryExpr) lhs )
+    if( auto rhsBin = cast(AstBinaryExpr) rhs )
     {
-        if( (lhsBin.op == Op.Lt || lhsBin.op == Op.LtEq)
-                && (op == Op.Lt || op == Op.LtEq) )
+        if( ( (rhsBin.op == Op.Lt || rhsBin.op == Op.LtEq)
+                  && (op == Op.Lt || op == Op.LtEq) )
+            ||
+            ( (rhsBin.op == Op.Gt || rhsBin.op == Op.GtEq)
+                  && (op == Op.Gt || op == Op.GtEq) )
+          )
         {
-            return new AstBinaryExpr(lhs.loc,
-                    Op.And,
-                        lhs,
-                        new AstBinaryExpr(lhs.loc, op, lhs.rhs, rhs));
+            return new AstBinaryExpr(lhs.loc, Op.And,
+                    new AstBinaryExpr(lhs.loc, op, lhs, rhsBin.lhs),
+                    rhs);
         }
     }
-    +/
+    
     return new AstBinaryExpr(lhs.loc, op, lhs, rhs);
 }
 

@@ -1,4 +1,4 @@
-module StructuredOutput;
+module eval.StructuredOutput;
 
 import tango.io.model.IConduit : OutputStream;
 import tango.io.stream.Format : FormatOutput;

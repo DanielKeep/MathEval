@@ -1,8 +1,8 @@
-module TokenStream;
+module eval.TokenStream;
 
-import Location;
-import Source;
-import Tokens;
+import eval.Location;
+import eval.Source;
+import eval.Tokens;
 
 final class TokenStream
 {
