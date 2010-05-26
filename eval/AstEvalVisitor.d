@@ -12,7 +12,7 @@ class AstEvalVisitor
 {
     alias bool delegate(char[], out Value) ResolveDg;
     alias bool delegate(char[], ref Value) DefineDg;
-    alias bool delegate(char[], Value[] delegate(), out Value) EvalDg;
+    alias bool delegate(char[], void delegate(char[], ...), Value[] delegate(), out Value) EvalDg;
 
     LocErr err;
     ResolveDg resolve;
@@ -120,7 +120,7 @@ class AstEvalVisitor
 
         void opErr(char[] fmt, ...)
         {
-            err(node.loc, Format.convert(_arguments, _argptr, fmt));
+            err(node.loc, "{}", Format.convert(_arguments, _argptr, fmt));
         }
 
         switch( node.op )
@@ -142,6 +142,11 @@ class AstEvalVisitor
 
     Value visit(AstFunctionExpr node)
     {
+        void fnErr(char[] fmt, ...)
+        {
+            err(node.loc, "{}", Format.convert(_arguments, _argptr, fmt));
+        }
+
         Value[] toArgs()
         {
             Value[] r;
@@ -152,7 +157,7 @@ class AstEvalVisitor
 
         // For now, functions aren't variables.
         Value r;
-        if( ! eval(node.ident, &toArgs, r) )
+        if( ! eval(node.ident, &fnErr, &toArgs, r) )
             err(node.loc, "unknown function '{}'", node.ident);
         return r;
     }
