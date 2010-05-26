@@ -1,0 +1,10 @@
+/.xf/
+/doc/
+/archives/
+
+*.exe
+*.map
+
+*~
+*.swp
+_backup/
