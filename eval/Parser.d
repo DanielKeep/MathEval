@@ -333,7 +333,6 @@ AstFunctionExpr tryparseFunctionExpr(TokenStream ts)
             args ~= parseExpr(ts);
             if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
                 break;
-            ts.popExpect(TOKcomma);
         }
     else
         ts.popExpect(TOKrparen);
