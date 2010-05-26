@@ -7,7 +7,6 @@ import tango.io.device.File;
 import tango.text.convert.Format;
 
 import eval.Ast;
-import eval.AstDumpVisitor;
 import eval.AstEvalVisitor;
 import eval.BuiltinFunctions;
 import eval.BuiltinVariables;
@@ -15,7 +14,6 @@ import eval.Parser;
 import eval.Lexer;
 import eval.Location;
 import eval.Source;
-import eval.StructuredOutput;
 import eval.TokenStream;
 import eval.Value;
 
@@ -38,7 +36,7 @@ int main(char[][] argv)
     char[] name;
     char[] src;
 
-    if( args[0] == "--" )
+    if( args[0] == "--" && args.length > 1 )
     {
         name = "cmdline";
         foreach( arg ; args[1..$] )
@@ -49,10 +47,15 @@ int main(char[][] argv)
                 src ~= (src.length > 0 && src[$-1] != '\n' ? " ": "") ~ arg;
         }
     }
-    else
+    else if( args.length == 1 )
     {
         name = args[0];
         src = cast(char[]) File.get(args[0]);
+    }
+    else
+    {
+        Stderr("Invalid usage.").newline;
+        return 1;
     }
 
     void error(Location loc, char[] fmt, ...)
@@ -103,5 +106,4 @@ int main(char[][] argv)
 
     return 0;
 }
-
 
