@@ -1,3 +1,9 @@
+/**
+    Built-in Functions.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.BuiltinFunctions;
 
 import eval.Statistical : rand, uniformReal;

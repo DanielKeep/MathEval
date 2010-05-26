@@ -1,3 +1,9 @@
+/**
+    Source code class.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.Source;
 
 import Utf = tango.text.convert.Utf;

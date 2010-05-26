@@ -1,3 +1,11 @@
+/**
+    Structured Output.
+
+    This is used to print out nicely indented and formatted text.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.StructuredOutput;
 
 import tango.io.model.IConduit : OutputStream;

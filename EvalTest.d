@@ -1,3 +1,9 @@
+/**
+    Math Eval Evaluation Tester
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module EvalTest;
 
 import tango.core.tools.TraceExceptions;

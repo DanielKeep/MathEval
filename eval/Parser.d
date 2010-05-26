@@ -1,3 +1,9 @@
+/**
+    Parser
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.Parser;
 
 import Float = tango.text.convert.Float;

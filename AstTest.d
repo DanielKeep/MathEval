@@ -1,3 +1,9 @@
+/**
+    Math Eval AST Tester
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module AstTest;
 
 import tango.core.tools.TraceExceptions;

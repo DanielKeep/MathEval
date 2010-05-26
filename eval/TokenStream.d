@@ -1,3 +1,12 @@
+/**
+    Token Stream.
+
+    This provides a high-level interface to a stream of Tokens being generated
+    by a callback function.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.TokenStream;
 
 import eval.Location;

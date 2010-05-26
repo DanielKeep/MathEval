@@ -1,3 +1,9 @@
+/**
+    Tokens.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.Tokens;
 
 import tango.text.convert.Format;

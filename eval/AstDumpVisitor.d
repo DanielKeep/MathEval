@@ -1,3 +1,11 @@
+/**
+    AST Dump Visitor.
+
+    This will print the AST as a nested S-expression.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.AstDumpVisitor;
 
 import eval.Ast;

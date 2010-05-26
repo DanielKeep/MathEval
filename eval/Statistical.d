@@ -1,7 +1,15 @@
+/**
+    Statistical support functions.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.Statistical;
 
 import tango.math.random.Kiss;
 
+// This is a pointer so that embedding applications can substitute their own
+// Kiss.
 Kiss* rand;
 
 static this()

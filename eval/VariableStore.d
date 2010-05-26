@@ -1,3 +1,13 @@
+/**
+    Variable Store.
+
+    Simple implementation of the variable protocol that lets users define
+    their own variables.  For best results, wrap this around a
+    BuiltinVariables instance.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.VariableStore;
 
 import eval.Value;

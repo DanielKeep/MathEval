@@ -1,3 +1,9 @@
+/**
+    Abstract Symbol Tree classes.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.Ast;
 
 import eval.Location;

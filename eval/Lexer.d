@@ -1,3 +1,9 @@
+/**
+    Lexer.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.Lexer;
 
 import tango.text.convert.Format;

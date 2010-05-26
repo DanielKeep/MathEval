@@ -1,3 +1,9 @@
+/**
+    Math Eval Lexer Tester
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module LexerTest;
 
 import tango.core.tools.TraceExceptions;

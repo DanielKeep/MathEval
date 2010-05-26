@@ -1,3 +1,11 @@
+/**
+    AST Evaluation Visitor.
+
+    This will recursively evaluate the provided AST.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.AstEvalVisitor;
 
 import eval.Ast;

@@ -1,3 +1,11 @@
+/**
+    Token support CTFE.
+
+    Used to generate the TOKx constants and conversion functions.
+
+    Authors: Daniel Keep <daniel.keep@gmail.com>
+    Copyright: See LICENSE.
+*/
 module eval.TokensCtfe;
 
 char[] generateTokens_ctfe
