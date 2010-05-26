@@ -100,19 +100,7 @@ struct ExprState
     struct Op
     {
         AstBinaryExpr.Op op;
-        float prec; /// precedence
-
-        /+
-        int opCmp(Op rhs)
-        {
-            if( this.prec < rhs.prec )
-                return -1;
-            else if( this.prec > rhs.prec )
-                return 1;
-            else
-                return 0;
-        }
-        +/
+        float prec;
     }
 
     AstExpr[] exprs;
@@ -133,6 +121,18 @@ struct ExprState
             crushRTL;
 
         ops ~= top;
+    }
+
+    AstExpr force()
+    {
+        assert( exprs.length >= 1 );
+        assert( ops.length == exprs.length-1 );
+
+        while( ops.length > 0 )
+            crushRTL;
+
+        assert( exprs.length == 1 );
+        return exprs[0];
     }
 
     void crushLTR()
@@ -165,18 +165,6 @@ struct ExprState
         exprs = exprs[0..$-1]; // pop 2, push 1
 
         exprs[$-1] = foldBinaryOp(op.op, lhs, rhs);
-    }
-
-    AstExpr force()
-    {
-        assert( exprs.length >= 1 );
-        assert( ops.length == exprs.length-1 );
-
-        while( ops.length > 0 )
-            crushLTR;
-
-        assert( exprs.length == 1 );
-        return exprs[0];
     }
 }
 
