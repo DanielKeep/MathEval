@@ -512,10 +512,10 @@ Identifier
            └───────`'`───────┘
 
     nested
-        >>─'('─┐ ┌────────────────┐ ┌─')'─┐
-               └───┬─╢ nested ╟───┴─┘     ╧
-                   ├─╢ ident ╟──┘
-                   └─────'-'────┘
+        >>─┐ ┌────────────────────────┐
+           └───┬─'('─╢ nested ╟─')'───┴─┐
+               ├─────╢ ident ╟──────┘   ╧
+               └─────────'-'────────┘
 
 The form beginning with ``$`` is included for accessing "external" variables
 as defined by the host program.
