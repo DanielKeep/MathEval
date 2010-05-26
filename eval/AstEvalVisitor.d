@@ -2,6 +2,7 @@ module eval.AstEvalVisitor;
 
 import eval.Ast;
 import eval.Location;
+import eval.Statistical : uniformReal;
 import eval.Value;
 
 import tango.math.Math : floor, pow;
@@ -158,8 +159,17 @@ class AstEvalVisitor
 
     Value visit(AstUniformExpr node)
     {
-        err(node.loc, "todo: implement uniform");
-        assert(false);
+        auto lv = visitBase(node.le);
+        auto uv = visitBase(node.ue);
+
+        if( !lv.isReal || !uv.isReal )
+            err(node.loc, "invalid types for range: {} and {}",
+                    lv.tagName, uv.tagName);
+
+        auto l = lv.asReal;
+        auto u = uv.asReal;
+
+        return Value(uniformReal(node.li, node.ui, l, u));
     }
 }
 
