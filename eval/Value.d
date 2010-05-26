@@ -41,6 +41,11 @@ struct Value
         return r;
     }
 
+    bool isInvalid()
+    {
+        return tag == Tag.Invalid;
+    }
+
     bool isLogical()
     {
         return tag == Tag.Logical;
