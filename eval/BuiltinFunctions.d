@@ -59,6 +59,7 @@ class BuiltinFunctions
             case "ceil":    fn = &fnCeil; break;
             case "round":   fn = &fnRound; break;
             case "trunc":   fn = &fnTrunc; break;
+            case "clamp":   fn = &fnClamp; break;
 
             case "erf":     fn = &fnErf; break;
             case "erfc":    fn = &fnErfc; break;
@@ -275,6 +276,14 @@ alias fnUnaryReal!("floor", floor) fnFloor;
 alias fnUnaryReal!("ceil", ceil) fnCeil;
 alias fnUnaryReal!("round", round_nonCrazy) fnRound;
 alias fnUnaryReal!("trunc", trunc) fnTrunc;
+
+Value fnClamp(ErrDg err, Value[] args)
+{
+    expNumArgs(err, "clamp", 3, args);
+    expReal(err, "clamp", args);
+
+    return Value(max(args[1].asReal, min(args[0].asReal, args[2].asReal)));
+}
 
 // ErrorFunction
 
