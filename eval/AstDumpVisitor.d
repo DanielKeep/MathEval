@@ -121,12 +121,15 @@ class AstDumpVisitor
             .push
             .seq(
             {
-                foreach( arg ; node.args[0..$-1] )
+                if( node.args.length > 0 )
                 {
-                    visitBase(arg);
-                    so.l();
+                    foreach( arg ; node.args[0..$-1] )
+                    {
+                        visitBase(arg);
+                        so.l();
+                    }
+                    visitBase(node.args[$-1]);
                 }
-                visitBase(node.args[$-1]);
             })
             .pl(")")
             .pop
