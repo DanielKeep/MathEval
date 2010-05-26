@@ -70,6 +70,38 @@ AstExprStmt parseExprStmt(TokenStream ts)
     return new AstExprStmt(loc, expr);
 }
 
+enum Fixity
+{
+    Left,
+    Right,
+}
+
+Fixity fixityOf(AstBinaryExpr.Op op)
+{
+    alias AstBinaryExpr.Op Op;
+    enum : Fixity { L = Fixity.Left, R = Fixity.Right }
+
+    switch( op )
+    {
+        case Op.Or:         return L;
+        case Op.And:        return L;
+        case Op.Eq:         return L;
+        case Op.NotEq:      return L;
+        case Op.Lt:         return L;
+        case Op.LtEq:       return L;
+        case Op.Gt:         return L;
+        case Op.GtEq:       return L;
+        case Op.Add:        return L;
+        case Op.Sub:        return L;
+        case Op.Mul:        return L;
+        case Op.Div:        return L;
+        case Op.IntDiv:     return L;
+        case Op.Exp:        return R;
+
+        default:            assert(false, "missing binary op fixity");
+    }
+}
+
 float precOf(AstBinaryExpr.Op op)
 {
     alias AstBinaryExpr.Op Op;
@@ -118,7 +150,7 @@ struct ExprState
         top.prec = precOf(binOp);
 
         while( ops.length > 0 && ops[$-1].prec > top.prec )
-            crushRTL;
+            crushTop;
 
         ops ~= top;
     }
@@ -129,42 +161,71 @@ struct ExprState
         assert( ops.length == exprs.length-1 );
 
         while( ops.length > 0 )
-            crushRTL;
+            crushTop;
 
         assert( exprs.length == 1 );
         return exprs[0];
     }
 
-    void crushLTR()
+    void crushTop()
     {
         assert( ops.length >= 1 );
         assert( exprs.length >= 2 );
         assert( ops.length == exprs.length-1 );
 
-        auto op = ops[0];
-        ops = ops[1..$];
+        auto prec = ops[$-1].prec;
+        auto fix = fixityOf(ops[$-1].op);
 
-        auto lhs = exprs[0];
-        auto rhs = exprs[1];
-        exprs = exprs[1..$]; // drop 2, prepend 1
+        size_t i = ops.length-1;
+        while( i>0 && ops[i-1].prec == prec )
+            -- i;
 
-        exprs[0] = foldBinaryOp(op.op, lhs, rhs);
+        auto crushOps = ops[i..$];
+        auto crushExprs = exprs[$-(crushOps.length+1)..$];
+
+        ops = ops[0..$-crushOps.length];
+        exprs = exprs[0..$-crushExprs.length+1];
+
+        if( fix == Fixity.Left )
+            exprs[$-1] = crushLTR(crushOps, crushExprs);
+        else
+            exprs[$-1] = crushRTL(crushOps, crushExprs);
     }
 
-    void crushRTL()
+    AstExpr crushLTR(Op[] ops, AstExpr[] exprs)
     {
-        assert( ops.length >= 1 );
-        assert( exprs.length >= 2 );
-        assert( ops.length == exprs.length-1 );
+        assert( ops.length > 0 );
+        assert( exprs.length == ops.length + 1 );
 
-        auto op = ops[$-1];
-        ops = ops[0..$-1];
+        AstExpr lhs = exprs[0];
+        exprs = exprs[1..$];
 
-        auto lhs = exprs[$-2];
-        auto rhs = exprs[$-1];
-        exprs = exprs[0..$-1]; // pop 2, push 1
+        while( ops.length > 0 )
+        {
+            lhs = foldBinaryOp(ops[0].op, lhs, exprs[0]);
+            ops = ops[1..$];
+            exprs = exprs[1..$];
+        }
 
-        exprs[$-1] = foldBinaryOp(op.op, lhs, rhs);
+        return lhs;
+    }
+
+    AstExpr crushRTL(Op[] ops, AstExpr[] exprs)
+    {
+        assert( ops.length > 0 );
+        assert( exprs.length == ops.length + 1 );
+
+        AstExpr rhs = exprs[$-1];
+        exprs = exprs[0..$-1];
+
+        while( ops.length > 0 )
+        {
+            rhs = foldBinaryOp(ops[$-1].op, exprs[$-1], rhs);
+            ops = ops[0..$-1];
+            exprs = exprs[0..$-1];
+        }
+
+        return rhs;
     }
 }
 
