@@ -1,6 +1,10 @@
 module eval.Value;
 
 import tango.util.Convert : to;
+import Float = tango.text.convert.Float;
+
+// Just a guess
+private enum : uint { FloatDP = 30 }
 
 struct Value
 {
@@ -85,7 +89,8 @@ struct Value
         {
             case Tag.Invalid:   return "<<invalid>>";
             case Tag.Logical:   return data.l ? "true" : "false";
-            case Tag.Real:      return to!(char[])(data.r);
+            case Tag.Real:      return Float.truncate(
+                                        Float.toString(data.r, FloatDP));
             default:            return "<<unknown("~to!(char[])(tag)~")>>";
         }
     }
