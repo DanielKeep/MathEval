@@ -371,9 +371,13 @@ AstExpr tryparseSubExpr(TokenStream ts)
 {
     if( ts.peek.type != TOKlparen ) return null;
 
-    ts.pop();
-    auto expr = parseExpr(ts);
-    ts.popExpect(TOKrparen);
+    AstExpr expr;
+    ts.skipEolDo
+    ({
+        ts.pop();
+        expr = parseExpr(ts);
+        ts.popExpect(TOKrparen);
+    });
     return expr;
 }
 

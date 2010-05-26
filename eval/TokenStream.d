@@ -46,6 +46,7 @@ final class TokenStream
     void unskipEolDo(void delegate() dg)
     {
         auto oldCounter = skipEolCounter;
+        skipEolCounter = 0;
         dg();
         skipEolCounter = oldCounter;
     }
@@ -57,16 +58,7 @@ final class TokenStream
 
     Token peek()
     {
-        if( skipEol )
-        {
-            Token t = peek(0);
-            size_t i = 0;
-            while( t.type == TOKeol )
-                t = peek(++i);
-            return t;
-        }
-        else
-            return peek(0);
+        return peek(0);
     }
 
     Token peek(size_t n)
@@ -79,7 +71,7 @@ final class TokenStream
             ({
                 do
                 {
-                    auto t = peek(i++);
+                    t = peek(i++);
                     if( t.type != TOKeol )
                         return;
                 }
