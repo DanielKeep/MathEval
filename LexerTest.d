@@ -17,7 +17,10 @@ int main(char[][] argv)
     char[] src;
 
     foreach( arg ; args )
-        src ~= (src.length > 0 ? " " : "") ~ arg;
+        if( arg == ";;" )
+            src ~= "\n";
+        else
+            src ~= (src.length > 0 && src[$-1] != '\n' ? " " : "") ~ arg;
 
     try
     {
