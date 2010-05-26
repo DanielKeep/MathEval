@@ -340,7 +340,7 @@ AstFunctionExpr tryparseFunctionExpr(TokenStream ts)
     return new AstFunctionExpr(loc, ident, args);
 }
 
-AstUnaryExpr tryparseUnaryExpr(TokenStream ts)
+AstExpr tryparseUnaryExpr(TokenStream ts)
 {
     alias AstUnaryExpr.Op Op;
     auto t = ts.peek;
@@ -357,6 +357,22 @@ AstUnaryExpr tryparseUnaryExpr(TokenStream ts)
 
     auto loc = ts.pop.loc;
     auto expr = parseExprAtom(ts);
+
+    // Simplify
+    switch( op )
+    {
+        case Op.Pos:
+            if( auto ne = cast(AstNumberExpr) expr )
+                return ne;
+            break;
+
+        case Op.Neg:
+            if( auto ne = cast(AstNumberExpr) expr )
+                return new AstNumberExpr(ne.loc, -ne.value);
+            break;
+
+        default:
+    }
 
     return new AstUnaryExpr(loc, op, expr);
 }
