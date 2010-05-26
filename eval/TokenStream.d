@@ -12,6 +12,8 @@ final class TokenStream
     NextToken next;
     LocErr err;
 
+    uint skipEolCounter = 0;
+
     this(Source src, NextToken next, LocErr err)
     {
         this.src = src;
@@ -22,13 +24,70 @@ final class TokenStream
         this.cached = 0;
     }
 
+    void pushSkipEol()
+    {
+        assert( skipEolCounter < skipEolCounter.max );
+        ++ skipEolCounter;
+    }
+
+    void popSkipEol()
+    {
+        assert( skipEolCounter > 0 );
+        -- skipEolCounter;
+    }
+
+    void skipEolDo(void delegate() dg)
+    {
+        pushSkipEol;
+        dg();
+        popSkipEol;
+    }
+
+    void unskipEolDo(void delegate() dg)
+    {
+        auto oldCounter = skipEolCounter;
+        dg();
+        skipEolCounter = oldCounter;
+    }
+
+    bool skipEol()
+    {
+        return skipEolCounter > 0;
+    }
+
     Token peek()
     {
-        return peek(0);
+        if( skipEol )
+        {
+            Token t = peek(0);
+            size_t i = 0;
+            while( t.type == TOKeol )
+                t = peek(++i);
+            return t;
+        }
+        else
+            return peek(0);
     }
 
     Token peek(size_t n)
     {
+        if( skipEol )
+        {
+            size_t i = 0;
+            Token t;
+            unskipEolDo
+            ({
+                do
+                {
+                    auto t = peek(i++);
+                    if( t.type != TOKeol )
+                        return;
+                }
+                while(true);
+            });
+            return t;
+        }
+
         if( cached > n )
             return cache[n];
 
@@ -77,6 +136,18 @@ final class TokenStream
 
     Token pop()
     {
+        if( skipEol )
+        {
+            Token t;
+            unskipEolDo
+            ({
+                t = pop;
+                while( t.type == TOKeol )
+                    t = pop;
+            });
+            return t;
+        }
+
         if( cached > 0 )
         {
             auto r = cache[0];
