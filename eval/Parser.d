@@ -373,7 +373,21 @@ AstExpr foldBinaryOp(AstBinaryExpr.Op op, AstExpr lhs, AstExpr rhs)
 {
     alias AstBinaryExpr.Op Op;
 
-    if( auto rhsBin = cast(AstBinaryExpr) rhs )
+    if( auto lhsBin = cast(AstBinaryExpr) lhs )
+    {
+        if( ( (lhsBin.op == Op.Lt || lhsBin.op == Op.LtEq)
+                  && (op == Op.Lt || op == Op.LtEq) )
+            ||
+            ( (lhsBin.op == Op.Gt || lhsBin.op == Op.GtEq)
+                  && (op == Op.Gt || op == Op.GtEq) )
+          )
+        {
+            return new AstBinaryExpr(lhs.loc, Op.And,
+                    lhs,
+                    new AstBinaryExpr(lhs.loc, op, lhsBin.rhs, rhs));;
+        }
+    }
+    else if( auto rhsBin = cast(AstBinaryExpr) rhs )
     {
         if( ( (rhsBin.op == Op.Lt || rhsBin.op == Op.LtEq)
                   && (op == Op.Lt || op == Op.LtEq) )
