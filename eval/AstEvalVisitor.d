@@ -12,7 +12,8 @@ class AstEvalVisitor
 {
     alias bool delegate(char[], out Value) ResolveDg;
     alias bool delegate(char[], ref Value) DefineDg;
-    alias bool delegate(char[], void delegate(char[], ...), Value[] delegate(), out Value) EvalDg;
+    alias bool delegate(char[], void delegate(char[], ...), size_t,
+            Value delegate(size_t), out Value) EvalDg;
 
     LocErr err;
     ResolveDg resolve;
@@ -147,17 +148,14 @@ class AstEvalVisitor
             err(node.loc, "{}", Format.convert(_arguments, _argptr, fmt));
         }
 
-        Value[] toArgs()
+        Value getArg(size_t i)
         {
-            Value[] r;
-            foreach( arg ; node.args )
-                r ~= visitBase(arg);
-            return r;
+            return visitBase(node.args[i]);
         }
 
         // For now, functions aren't variables.
         Value r;
-        if( ! eval(node.ident, &fnErr, &toArgs, r) )
+        if( ! eval(node.ident, &fnErr, node.args.length, &getArg, r) )
             err(node.loc, "unknown function '{}'", node.ident);
         return r;
     }
@@ -257,7 +255,13 @@ Value binDiv(OpErr err, Value lhs, Value rhs)
 Value binIntDiv(OpErr err, Value lhs, Value rhs)
 {
     if( lhs.isReal && rhs.isReal )
-        return Value(floor(lhs.asReal / rhs.asReal));
+    {
+        auto l = lhs.asReal;
+        auto r = rhs.asReal;
+        auto l_div_r = l/r;
+        auto l_intdiv_r = floor(l_div_r);
+        return Value(l_intdiv_r);
+    }
     
     else
         err("invalid types for division: {} and {}",
