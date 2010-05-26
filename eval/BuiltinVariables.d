@@ -32,6 +32,14 @@ class BuiltinVariables
                 value = Value(1.618_033_988_749_894_848L);
                 return true;
 
+            case "true":
+                value = Value(true);
+                return true;
+
+            case "false":
+                value = Value(false);
+                return true;
+
             default:
                 return nextResolve(ident, value);
         }
