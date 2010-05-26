@@ -204,7 +204,15 @@ AstExpr parseExpr(TokenStream ts)
         return null;
     }
 
-    auto lhs = tryparseAtom();
+    AstExpr parseAtom()
+    {
+        auto expr = tryparseAtom();
+        if( expr is null )
+            ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
+        return expr;
+    }
+
+    auto lhs = parseAtom();
 
     if( lhs is null )
         ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
@@ -221,7 +229,7 @@ AstExpr parseExpr(TokenStream ts)
 
         while( true )
         {
-            st.pushExpr(tryparseAtom());
+            st.pushExpr(parseAtom());
 
             if( tryparseBinaryOp(ts, op) )
                 st.pushOp(op);
