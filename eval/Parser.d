@@ -322,21 +322,21 @@ AstFunctionExpr tryparseFunctionExpr(TokenStream ts)
     if( ts.peek(1).type != TOKlparen ) return null;
 
     auto loc = ts.peek.loc;
-    auto ident = ts.pop.text;
-    ts.pop;
+    auto ident = ts.popExpect(TOKident).text;
+    ts.popExpect(TOKlparen);
 
     AstExpr[] args;
 
     if( ts.peek.type != TOKrparen )
-    while( true )
-    {
-        args ~= parseExpr(ts);
-        if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
-            break;
-        ts.pop;
-    }
-
-    ts.pop;
+        while( true )
+        {
+            args ~= parseExpr(ts);
+            if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
+                break;
+            ts.popExpect(TOKcomma);
+        }
+    else
+        ts.popExpect(TOKrparen);
 
     return new AstFunctionExpr(loc, ident, args);
 }
