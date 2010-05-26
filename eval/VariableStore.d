@@ -9,9 +9,12 @@ class VariableStore
     ResolveDg   _nextResolve;
     Value[char[]] vars;
 
-    this(ResolveDg nextResolve = null)
+    bool allowRedefine = false;
+
+    this(ResolveDg nextResolve = null, bool allowRedefine = false)
     {
         this._nextResolve = nextResolve;
+        this.allowRedefine = allowRedefine;
     }
 
     bool resolve(char[] ident, out Value value)
@@ -29,10 +32,14 @@ class VariableStore
     bool define(char[] ident, ref Value value)
     {
         Value tmp;
-        if( resolve(ident, tmp) )
+        if( nextResolve(ident, tmp) )
             return false;
 
-        variables[ident] = value;
+        if( ! allowRedefine )
+            if( !!( ident in vars ) )
+                return false;
+
+        vars[ident.dup] = value;
         return true;
     }
 
