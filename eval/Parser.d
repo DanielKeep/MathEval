@@ -130,12 +130,28 @@ struct ExprState
         top.prec = precOf(binOp);
 
         while( ops.length > 0 && ops[$-1].prec > top.prec )
-            crush;
+            crushRTL;
 
         ops ~= top;
     }
 
-    void crush()
+    void crushLTR()
+    {
+        assert( ops.length >= 1 );
+        assert( exprs.length >= 2 );
+        assert( ops.length == exprs.length-1 );
+
+        auto op = ops[0];
+        ops = ops[1..$];
+
+        auto lhs = exprs[0];
+        auto rhs = exprs[1];
+        exprs = exprs[1..$]; // drop 2, prepend 1
+
+        exprs[0] = foldBinaryOp(op.op, lhs, rhs);
+    }
+
+    void crushRTL()
     {
         assert( ops.length >= 1 );
         assert( exprs.length >= 2 );
@@ -157,7 +173,7 @@ struct ExprState
         assert( ops.length == exprs.length-1 );
 
         while( ops.length > 0 )
-            crush;
+            crushLTR;
 
         assert( exprs.length == 1 );
         return exprs[0];
