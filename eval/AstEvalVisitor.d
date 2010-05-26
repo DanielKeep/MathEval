@@ -48,6 +48,8 @@ class AstEvalVisitor
             return visit(stn);
         if( auto stn = cast(AstUniformExpr) node )
             return visit(stn);
+        if( auto stn = cast(AstSharedExpr) node )
+            return visit(stn);
 
         return defaultVisit(node);
     }
@@ -75,6 +77,7 @@ class AstEvalVisitor
 
     Value visit(AstExprStmt node)
     {
+        sharedCache = null;
         return visitBase(node.expr);
     }
 
@@ -173,6 +176,20 @@ class AstEvalVisitor
         auto u = uv.asReal;
 
         return Value(uniformReal(node.li, node.ui, l, u));
+    }
+
+    Value[AstSharedExpr] sharedCache;
+
+    Value visit(AstSharedExpr node)
+    {
+        if( auto v = node in sharedCache )
+            return *v;
+        else
+        {
+            auto v = visitBase(node.expr);
+            sharedCache[node] = v;
+            return v;
+        }
     }
 }
 

@@ -13,6 +13,7 @@ const char[][] AstNodeNames =
     "AstVariableExpr",
     "AstFunctionExpr",
     "AstUniformExpr",
+    "AstSharedExpr",
 ];
 
 abstract class AstNode
@@ -226,6 +227,17 @@ class AstUniformExpr : AstExpr
         this.ui = ui;
         this.le = le;
         this.ue = ue;
+    }
+}
+
+class AstSharedExpr : AstExpr
+{
+    AstExpr expr;
+
+    this(Location loc, AstExpr expr)
+    {
+        super(loc);
+        this.expr = expr;
     }
 }
 

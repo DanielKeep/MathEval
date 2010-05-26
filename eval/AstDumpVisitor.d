@@ -32,6 +32,8 @@ class AstDumpVisitor
             return visit(stn);
         if( auto stn = cast(AstUniformExpr) node )
             return visit(stn);
+        if( auto stn = cast(AstSharedExpr) node )
+            return visit(stn);
 
         return defaultVisit(node);
     }
@@ -145,6 +147,17 @@ class AstDumpVisitor
             .seq({ visitBase(node.le); }).l()
             .f("{} ", node.ui ? "inclusive" : "exclusive")
             .seq({ visitBase(node.ue); })
+            .pl(")")
+            .pop
+        ;
+    }
+
+    void visit(AstSharedExpr node)
+    {
+        so
+            .fl("(shared 0x{:x,8}", cast(void*) node)
+            .push
+            .seq({ visitBase(node.expr); })
             .pl(")")
             .pop
         ;
