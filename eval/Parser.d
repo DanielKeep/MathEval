@@ -458,9 +458,10 @@ AstExpr foldBinaryOp(AstBinaryExpr.Op op, AstExpr lhs, AstExpr rhs)
                   && (op == Op.Gt || op == Op.GtEq) )
           )
         {
+            auto mid = sharedExpr(lhsBin.rhs);
             return new AstBinaryExpr(lhs.loc, Op.And,
-                    lhs,
-                    new AstBinaryExpr(lhs.loc, op, lhsBin.rhs, rhs));;
+                    new AstBinaryExpr(lhs.loc, lhsBin.op, lhsBin.lhs, mid),
+                    new AstBinaryExpr(lhs.loc, op, mid, rhs));;
         }
     }
     else if( auto rhsBin = cast(AstBinaryExpr) rhs )
@@ -472,12 +473,27 @@ AstExpr foldBinaryOp(AstBinaryExpr.Op op, AstExpr lhs, AstExpr rhs)
                   && (op == Op.Gt || op == Op.GtEq) )
           )
         {
+            auto mid = sharedExpr(rhsBin.lhs);
             return new AstBinaryExpr(lhs.loc, Op.And,
-                    new AstBinaryExpr(lhs.loc, op, lhs, rhsBin.lhs),
-                    rhs);
+                    new AstBinaryExpr(lhs.loc, op, lhs, mid),
+                    new AstBinaryExpr(lhs.loc, rhsBin.op, mid, rhsBin.rhs));
         }
     }
     
     return new AstBinaryExpr(lhs.loc, op, lhs, rhs);
+}
+
+/*
+    Turns expr into a shared expression if it's worth doing so.
+*/
+AstExpr sharedExpr(AstExpr expr)
+{
+    if( cast(AstNumberExpr) expr )
+        return expr;
+
+    if( cast(AstVariableExpr) expr )
+        return expr;
+
+    return new AstSharedExpr(expr.loc, expr);
 }
 
