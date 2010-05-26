@@ -242,26 +242,7 @@ AstExpr parseExpr(TokenStream ts)
     - subexpression
     */
 
-    AstExpr tryparseAtom()
-    {
-        if( auto e = tryparseNumberExpr(ts) )   return e;
-        if( auto e = tryparseUnaryExpr(ts) )    return e;
-        if( auto e = tryparseFunctionExpr(ts) ) return e;
-        if( auto e = tryparseVariableExpr(ts) ) return e;
-        if( auto e = tryparseUniformExpr(ts) )  return e;
-        if( auto e = tryparseSubExpr(ts) )      return e;
-        return null;
-    }
-
-    AstExpr parseAtom()
-    {
-        auto expr = tryparseAtom();
-        if( expr is null )
-            ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
-        return expr;
-    }
-
-    auto lhs = parseAtom();
+    auto lhs = parseExprAtom(ts);
 
     if( lhs is null )
         ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
@@ -278,7 +259,7 @@ AstExpr parseExpr(TokenStream ts)
 
         while( true )
         {
-            st.pushExpr(parseAtom());
+            st.pushExpr(parseExprAtom(ts));
 
             if( tryparseBinaryOp(ts, op) )
                 st.pushOp(op);
@@ -291,6 +272,25 @@ AstExpr parseExpr(TokenStream ts)
     else
         // No infix chain
         return lhs;
+}
+
+AstExpr tryparseExprAtom(TokenStream ts)
+{
+    if( auto e = tryparseNumberExpr(ts) )   return e;
+    if( auto e = tryparseUnaryExpr(ts) )    return e;
+    if( auto e = tryparseFunctionExpr(ts) ) return e;
+    if( auto e = tryparseVariableExpr(ts) ) return e;
+    if( auto e = tryparseUniformExpr(ts) )  return e;
+    if( auto e = tryparseSubExpr(ts) )      return e;
+    return null;
+}
+
+AstExpr parseExprAtom(TokenStream ts)
+{
+    auto expr = tryparseExprAtom(ts);
+    if( expr is null )
+        ts.err(ts.src.loc, "expected expression, got '{}'", ts.peek.text);
+    return expr;
 }
 
 AstExpr tryparseNumberExpr(TokenStream ts)
@@ -356,7 +356,7 @@ AstUnaryExpr tryparseUnaryExpr(TokenStream ts)
     }
 
     auto loc = ts.pop.loc;
-    auto expr = parseExpr(ts);
+    auto expr = parseExprAtom(ts);
 
     return new AstUnaryExpr(loc, op, expr);
 }
