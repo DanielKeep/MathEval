@@ -110,6 +110,8 @@ static this()
     vm["π"]     = Value(3.141_592_653_589_793_238L);
     vm["phi"]   = Value(1.618_033_988_749_894_848L);
     vm["φ"]     = Value(1.618_033_988_749_894_848L);
+    vm["inf"]   = Value(real.infinity);
+    vm["nan"]   = Value(real.nan);
     vm["true"]  = Value(true);
     vm["false"] = Value(false);
 

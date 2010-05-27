@@ -312,9 +312,16 @@ Name            Meaning                 Value (to 19 decimal digits)
 ``e``           Euler's number          2.718,281,828,459,045,235
 ``pi``, ``π``   Pi                      3.141,592,653,589,793,238
 ``phi``, ``φ``  Golden ratio            1.618,033,988,749,894,848
+``inf``         Infinity                ∞
+``nan``         Not-a-Number [*]_
 ``true``        Tautology               ⊤
 ``false``       Contradiction           ⊥
 =============== ======================= ================================
+
+.. [*]  Not-a-Number is a special value in computer hardware that is used to
+        represent the result of undefined calculations.  For example,
+        *sqrt*\ (-1), in contexts without imaginary numbers, evaluates to
+        ``nan``.  As does *inf* − *inf*.
 
 Functions
 =========
