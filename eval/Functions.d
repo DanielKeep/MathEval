@@ -35,3 +35,19 @@ interface Functions
     int iterate(int delegate(ref char[]) dg);
 }
 
+class FunctionsDelegate : Functions
+{
+    this(typeof(&this.invoke) invokeDg)
+    {
+        this.invokeDg = invokeDg;
+    }
+
+    bool invoke(char[] ident, ErrDg err, size_t args, ArgDg getArg,
+            out Value result)
+    {
+        return this.invokeDg(ident, err, args, getArg, result);
+    }
+
+    protected typeof(&this.invoke) invokeDg;
+}
+
