@@ -40,9 +40,11 @@ void startRepl()
             ("Commands:").newline()
             .newline()
             (" .c, .clear   Clears all variables.").newline()
+            (" .f, .funcs   Lists all functions.").newline()
             (" .h, .help    Shows this text.").newline()
             (" .q, .quit    Exits the repl.").newline()
-            (" .v, .vars    Lists all user-defined variables.").newline()
+            (" .v, .vars    Lists all variables.").newline()
+            .newline()
         ;
     }
 
@@ -81,6 +83,12 @@ replLoop:
             case ".c": case ".clear":
                 // HACK!
                 vars.vars = null;
+                continue replLoop;
+
+            case ".f": case ".funcs":
+                foreach( k ; &bifunc.iterate )
+                    Stdout.formatln(" - {}", k);
+                Stdout.newline();
                 continue replLoop;
 
             case ".h": case ".help":
