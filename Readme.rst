@@ -256,11 +256,17 @@ Symbol  Meaning                     Prec.   Assoc.  Alternatives
 ``*``   Multiplication              6.5     left
 ``/``   Division                    6.5     left
 ``//``  Integer division [*]_       6.5     left
+``mod`` Modulus [*]_                6.5     left
+``rem`` Remainder [*]_              6.5     left
 ``+``   Addition                    6.2     left
 ``-``   Subtraction                 6.2     left
 ======= =========================== ======= ======= ===============
 
 .. [*]  *x* // *y* is effectively *floor*\ (\ *x* ÷ *y*\ )
+
+.. [*]  *x* mod *y* = *x* - *y* × *floor*\ (\ *x* ÷ *y*\ )
+
+.. [*]  *x* rem *y* = *x* - *y* × *trunc*\ (\ *x* ÷ *y*\ )
 
 Comparative
 -----------

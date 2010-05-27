@@ -247,6 +247,20 @@ bool lexLiteral(Source src, LexErr err, out Token token)
                     TOKlet, src.sliceFrom(mark));
             return true;
 
+        case 'm':
+            mark = src.save;
+            src.advance;
+            tail = src.advance("od".length);
+            if( isIdent(src[0]) || tail != "od" )
+            {
+                src.restore(mark);
+                return false;
+            }
+
+            token = Token(src.locFrom(mark),
+                    TOKmod, src.sliceFrom(mark));
+            return true;
+
         case 'n':
             mark = src.save;
             src.advance;
@@ -273,6 +287,20 @@ bool lexLiteral(Source src, LexErr err, out Token token)
 
             token = Token(src.locFrom(mark),
                     TOKor, src.sliceFrom(mark));
+            return true;
+
+        case 'r':
+            mark = src.save;
+            src.advance;
+            tail = src.advance("em".length);
+            if( isIdent(src[0]) || tail != "em" )
+            {
+                src.restore(mark);
+                return false;
+            }
+
+            token = Token(src.locFrom(mark),
+                    TOKrem, src.sliceFrom(mark));
             return true;
 
         case 'u':

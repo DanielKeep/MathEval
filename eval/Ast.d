@@ -114,6 +114,8 @@ class AstBinaryExpr : AstExpr
         Mul,
         Div,
         IntDiv,
+        Mod,
+        Rem,
         Exp,
         And,
         Or,
@@ -148,6 +150,8 @@ class AstBinaryExpr : AstExpr
             case Op.Mul:    return "Mul";
             case Op.Div:    return "Div";
             case Op.IntDiv: return "IntDiv";
+            case Op.Mod:    return "Mod";
+            case Op.Rem:    return "Rem";
             case Op.Exp:    return "Exp";
             case Op.And:    return "And";
             case Op.Or:     return "Or";

@@ -41,8 +41,10 @@ const char[][] LiteralTokens =
 [
     "and",
     "let",
+    "mod",
     "not",
     "or",
+    "rem",
     "uniform",
 ];
 

@@ -15,7 +15,7 @@ import eval.Statistical : uniformReal;
 import eval.Value;
 import eval.Variables;
 
-import tango.math.Math : floor, pow;
+import tango.math.Math : floor, pow, trunc;
 import tango.text.convert.Format;
 
 class AstEvalVisitor
@@ -113,6 +113,8 @@ class AstEvalVisitor
             case Op.Mul:    return binMul(&opErr, lhs, rhs);
             case Op.Div:    return binDiv(&opErr, lhs, rhs);
             case Op.IntDiv: return binIntDiv(&opErr, lhs, rhs);
+            case Op.Mod:    return binMod(&opErr, lhs, rhs);
+            case Op.Rem:    return binRem(&opErr, lhs, rhs);
             case Op.Exp:    return binExp(&opErr, lhs, rhs);
             case Op.And:    return binAnd(&opErr, lhs, rhs);
             case Op.Or:     return binOr(&opErr, lhs, rhs);
@@ -285,6 +287,32 @@ Value binIntDiv(OpErr err, Value lhs, Value rhs)
     
     else
         err("invalid types for division: {} and {}",
+                lhs.tagName, rhs.tagName);
+}
+
+Value binMod(OpErr err, Value lhs, Value rhs)
+{
+    if( lhs.isReal && rhs.isReal )
+    {
+        auto a = lhs.asReal;
+        auto b = rhs.asReal;
+        return Value(a-b*floor(a/b));
+    }
+    else
+        err("invalid types for modulus: {} and {}",
+                lhs.tagName, rhs.tagName);
+}
+
+Value binRem(OpErr err, Value lhs, Value rhs)
+{
+    if( lhs.isReal && rhs.isReal )
+    {
+        auto a = lhs.asReal;
+        auto b = rhs.asReal;
+        return Value(a-b*trunc(a/b));
+    }
+    else
+        err("invalid types for remainder: {} and {}",
                 lhs.tagName, rhs.tagName);
 }
 
