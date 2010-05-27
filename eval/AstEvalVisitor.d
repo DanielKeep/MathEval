@@ -9,31 +9,26 @@
 module eval.AstEvalVisitor;
 
 import eval.Ast;
+import eval.Functions;
 import eval.Location;
 import eval.Statistical : uniformReal;
 import eval.Value;
+import eval.Variables;
 
 import tango.math.Math : floor, pow;
 import tango.text.convert.Format;
 
 class AstEvalVisitor
 {
-    alias bool delegate(char[], out Value) ResolveDg;
-    alias bool delegate(char[], ref Value) DefineDg;
-    alias bool delegate(char[], void delegate(char[], ...), size_t,
-            Value delegate(size_t), out Value) EvalDg;
-
     LocErr err;
-    ResolveDg resolve;
-    DefineDg define;
-    EvalDg eval;
+    Variables vars;
+    Functions funcs;
 
-    this(LocErr err, ResolveDg resolve, DefineDg define, EvalDg eval)
+    this(LocErr err, Variables vars, Functions funcs)
     {
         this.err = err;
-        this.resolve = resolve;
-        this.define = define;
-        this.eval = eval;
+        this.vars = vars;
+        this.funcs = funcs;
     }
 
     Value visitBase(AstNode node)
@@ -77,7 +72,7 @@ class AstEvalVisitor
 
     Value visit(AstLetStmt node)
     {
-        if( ! define(node.ident, visitBase(node.expr)) )
+        if( ! vars.define(node.ident, visitBase(node.expr)) )
             err(node.loc, "cannot redefine '{}'", node.ident);
 
         return Value();
@@ -147,7 +142,7 @@ class AstEvalVisitor
     Value visit(AstVariableExpr node)
     {
         Value r;
-        if( ! resolve(node.ident, r) )
+        if( ! vars.resolve(node.ident, r) )
             err(node.loc, "unknown variable '{}'", node.ident);
         return r;
     }
@@ -166,7 +161,7 @@ class AstEvalVisitor
 
         // For now, functions aren't variables.
         Value r;
-        if( ! eval(node.ident, &fnErr, node.args.length, &getArg, r) )
+        if( ! funcs.invoke(node.ident, &fnErr, node.args.length, &getArg, r) )
             err(node.loc, "unknown function '{}'", node.ident);
         return r;
     }

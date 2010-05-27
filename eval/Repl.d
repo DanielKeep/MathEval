@@ -57,9 +57,8 @@ void startRepl()
 
     scope bivars = new BuiltinVariables;
     scope bifunc = new BuiltinFunctions;
-    scope vars = new VariableStore(&bivars.resolve);
-    scope eval = new AstEvalVisitor(&error,
-            &vars.resolve, &vars.define, &bifunc.eval);
+    scope vars = new VariableStore(bivars);
+    scope eval = new AstEvalVisitor(&error, vars, bifunc);
 
     Stdout
         ("Hi, I'm the math eval REPL.").newline()
@@ -92,9 +91,13 @@ replLoop:
                 break replLoop;
 
             case ".v": case ".vars":
-                Stdout("User-defined variables:").newline;
-                foreach( k,v ; vars.vars )
+                foreach( k ; &vars.iterate )
+                {
+                    Value v;
+                    vars.resolve(k, v);
                     Stdout.formatln("let {} = {}", k, v.toString);
+                }
+                Stdout.newline();
                 continue replLoop;
 
             default:

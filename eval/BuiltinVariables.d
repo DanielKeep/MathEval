@@ -7,76 +7,113 @@
 module eval.BuiltinVariables;
 
 import eval.Value;
+import eval.Variables;
 
-class BuiltinVariables
+class BuiltinVariables : Variables
 {
-    alias bool delegate(char[], out Value) ResolveDg;
-    alias bool delegate(char[], ref Value) DefineDg;
+    Variables next;
 
-    ResolveDg   _nextResolve;
-    DefineDg    _nextDefine;
-
-    this(ResolveDg nextResolve = null, DefineDg nextDefine = null)
+    this(Variables next = null)
     {
-        this._nextResolve = nextResolve;
-        this._nextDefine  = nextDefine;
+        this.next = next;
     }
 
     bool resolve(char[] ident, out Value value)
     {
-        switch( ident )
+        if( auto vptr = ident in varMap )
         {
-            case "e":
-                value = Value(2.718_281_828_459_045_235L);
-                return true;
-
-            case "pi": case "π":
-                value = Value(3.141_592_653_589_793_238L);
-                return true;
-
-            case "phi": case "φ":
-                value = Value(1.618_033_988_749_894_848L);
-                return true;
-
-            case "true":
-                value = Value(true);
-                return true;
-
-            case "false":
-                value = Value(false);
-                return true;
-
-            default:
-                return nextResolve(ident, value);
+            value = *vptr;
+            return true;
         }
+        else
+            return nextResolve(ident, value);
     }
 
     bool define(char[] ident, ref Value value)
     {
-        switch( ident )
-        {
-            case "e":
-            case "pi": case "π":
-            case "phi": case "φ":
-                return false;
+        if( !!( ident in varMap ) )
+            return false;
+        else
+            return nextDefine(ident, value);
+    }
 
-            default:
-                return nextDefine(ident, value);
+    int iterate(int delegate(ref char[]) dg)
+    {
+        auto names = varNames;
+
+        int r = 0;
+        foreach( nextName ; &nextIterate )
+        {
+            char[] name;
+
+            while( names.length > 0 && names[0] < nextName )
+            {
+                name = names[0];
+                names = names[1..$];
+                r = dg(name);
+                if( r != 0 )
+                    return r;
+            }
+
+            name = nextName;
+
+            r = dg(name);
+            if( r != 0 )
+                return r;
         }
+
+        foreach( name ; names )
+        {
+            char[] tmp = name;
+            r = dg(tmp);
+            if( r != 0 )
+                return r;
+        }
+
+        return r;
     }
 
     bool nextResolve(char[] ident, out Value value)
     {
-        if( _nextResolve )
-            return _nextResolve(ident, value);
+        if( next !is null )
+            return next.resolve(ident, value);
         return false;
     }
 
     bool nextDefine(char[] ident, ref Value value)
     {
-        if( _nextDefine )
-            return _nextDefine(ident, value);
+        if( next !is null )
+            return next.define(ident, value);
         return false;
     }
+
+    int nextIterate(int delegate(ref char[]) dg)
+    {
+        if( next !is null )
+            return next.iterate(dg);
+
+        return 0;
+    }
+}
+
+private:
+
+Value[char[]] varMap;
+char[][] varNames;
+
+static this()
+{
+    alias varMap vm;
+
+    vm["e"]     = Value(2.718_281_828_459_045_235L);
+    vm["pi"]    = Value(3.141_592_653_589_793_238L);
+    vm["π"]     = Value(3.141_592_653_589_793_238L);
+    vm["phi"]   = Value(1.618_033_988_749_894_848L);
+    vm["φ"]     = Value(1.618_033_988_749_894_848L);
+    vm["true"]  = Value(true);
+    vm["false"] = Value(false);
+
+    varNames = vm.keys;
+    varNames.sort;
 }
 

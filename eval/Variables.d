@@ -34,15 +34,17 @@ interface Variables
 
 class VariablesDelegate : Variables
 {
-    this(typeof(&this.resolve) resolveDg,
-            typeof(&this.define) defineDg,
-            typeof(&this.iterate) iterateDg)
+    alias bool delegate(char[], out Value) ResolveDg;
+    alias bool delegate(char[], ref Value) DefineDg;
+    alias int delegate(int delegate(ref char[])) IterateDg;
+
+    this(ResolveDg resolveDg, DefineDg defineDg, IterateDg iterateDg)
     {
         this.resolveDg = resolveDg;
         this.defineDg = defineDg;
         this.iterateDg = iterateDg;
     }
-    
+
     bool resolve(char[] ident, out Value value)
     {
         return resolveDg(ident, value);
@@ -58,8 +60,8 @@ class VariablesDelegate : Variables
         return iterateDg(dg);
     }
 
-    protected typeof(&this.resolve) resolveDg;
-    protected typeof(&this.define) defineDg;
-    protected typeof(&this.iterate) iterateDg;
+    protected ResolveDg resolveDg;
+    protected DefineDg defineDg;
+    protected IterateDg iterateDg;
 }
 

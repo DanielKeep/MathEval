@@ -6,6 +6,7 @@
 */
 module eval.BuiltinFunctions;
 
+import eval.Functions;
 import eval.Statistical : rand, uniformReal;
 import eval.Value;
 
@@ -13,69 +14,29 @@ import tango.math.ErrorFunction;
 import tango.math.Math;
 import tango.math.Probability;
 
-class BuiltinFunctions
+class BuiltinFunctions : Functions
 {
-    alias bool delegate(char[], ErrDg, size_t,
-            Value delegate(size_t), out Value) EvalDg;
+    Functions next;
 
-    EvalDg _nextEval;
-
-    this(EvalDg nextEval = null)
+    this(Functions next = null)
     {
-        this._nextEval = nextEval;
+        this.next = next;
     }
 
-    bool eval(char[] ident, ErrDg err, size_t args,
-            Value delegate(size_t) getArg, out Value result)
+    bool invoke(char[] ident, ErrDg err,
+            size_t args, ArgDg getArg, out Value result)
     {
         Value function(ErrDg, Value[]) fn;
         Value function(ErrDg, size_t, Value delegate(size_t)) lazyFn;
 
-        switch( ident )
-        {
-            case "if":      lazyFn = &fnIf; break;
+        if( auto fptr = ident in fnMap )
+            fn = *fptr;
 
-            case "abs":     fn = &fnAbs; break;
-            case "min":     fn = &fnMin; break;
-            case "max":     fn = &fnMax; break;
-            
-            case "cos":     fn = &fnCos; break;
-            case "sin":     fn = &fnSin; break;
-            case "tan":     fn = &fnTan; break;
+        else if( auto fptr = ident in lazyFnMap )
+            lazyFn = *fptr;
 
-            case "acos":    fn = &fnAcos; break;
-            case "asin":    fn = &fnAsin; break;
-            case "atan":    fn = &fnAtan; break;
-            case "atan2":   fn = &fnAtan2; break;
-
-            case "cosh":    fn = &fnCosh; break;
-            case "sinh":    fn = &fnSinh; break;
-            case "tanh":    fn = &fnTanh; break;
-
-            case "acosh":   fn = &fnAcosh; break;
-            case "asinh":   fn = &fnAsinh; break;
-            case "atanh":   fn = &fnAtanh; break;
-
-            case "sqrt":    fn = &fnSqrt; break;
-            case "log":     fn = &fnLog; break;
-            case "log2":    fn = &fnLog2; break;
-            case "log10":   fn = &fnLog10; break;
-
-            case "floor":   fn = &fnFloor; break;
-            case "ceil":    fn = &fnCeil; break;
-            case "round":   fn = &fnRound; break;
-            case "trunc":   fn = &fnTrunc; break;
-            case "clamp":   fn = &fnClamp; break;
-
-            case "erf":     fn = &fnErf; break;
-            case "erfc":    fn = &fnErfc; break;
-
-            case "normal":  fn = &fnNormal; break;
-            case "poisson": fn = &fnPoisson; break;
-
-            default:
-                return nextEval(ident, err, args, getArg, result);
-        }
+        else
+            return nextInvoke(ident, err, args, getArg, result);
 
         if( fn !is null )
         {
@@ -94,18 +55,116 @@ class BuiltinFunctions
         return true;
     }
 
-    bool nextEval(char[] ident, ErrDg err, size_t args,
-            Value delegate(size_t) getArg, out Value result)
+    int iterate(int delegate(ref char[]) dg)
     {
-        if( _nextEval !is null )
-            return _nextEval(ident, err, args, getArg, result);
+        auto names = fnNames;
+
+        int r = 0;
+        foreach( nextName ; &nextIterate )
+        {
+            char[] name;
+
+            while( names.length > 0 && names[0] < nextName )
+            {
+                name = names[0];
+                names = names[1..$];
+                r = dg(name);
+                if( r != 0 )
+                    return r;
+            }
+
+            name = nextName;
+
+            r = dg(name);
+            if( r != 0 )
+                return r;
+        }
+
+        foreach( name ; names )
+        {
+            char[] tmp = name;
+            r = dg(tmp);
+            if( r != 0 )
+                return r;
+        }
+
+        return r;
+    }
+
+    bool nextInvoke(char[] ident, ErrDg err,
+            size_t args, ArgDg getArg, out Value result)
+    {
+        if( next !is null )
+            return next.invoke(ident, err, args, getArg, result);
         return false;
+    }
+
+    int nextIterate(int delegate(ref char[]) dg)
+    {
+        if( next !is null )
+            return next.iterate(dg);
+        return 0;
     }
 }
 
 private:
 
 alias void delegate(char[], ...) ErrDg;
+alias Value function(ErrDg, Value[]) Fn;
+alias Value function(ErrDg, size_t, Value delegate(size_t)) LazyFn;
+
+Fn[char[]] fnMap;
+LazyFn[char[]] lazyFnMap;
+char[][] fnNames;
+
+static this()
+{
+    alias fnMap fm;
+    alias lazyFnMap lm;
+
+    lm["if"]      = &fnIf;
+
+    fm["abs"]     = &fnAbs;
+    fm["min"]     = &fnMin;
+    fm["max"]     = &fnMax;
+            
+    fm["cos"]     = &fnCos;
+    fm["sin"]     = &fnSin;
+    fm["tan"]     = &fnTan;
+
+    fm["acos"]    = &fnAcos;
+    fm["asin"]    = &fnAsin;
+    fm["atan"]    = &fnAtan;
+    fm["atan2"]   = &fnAtan2;
+
+    fm["cosh"]    = &fnCosh;
+    fm["sinh"]    = &fnSinh;
+    fm["tanh"]    = &fnTanh;
+
+    fm["acosh"]   = &fnAcosh;
+    fm["asinh"]   = &fnAsinh;
+    fm["atanh"]   = &fnAtanh;
+
+    fm["sqrt"]    = &fnSqrt;
+    fm["log"]     = &fnLog;
+    fm["log2"]    = &fnLog2;
+    fm["log10"]   = &fnLog10;
+
+    fm["floor"]   = &fnFloor;
+    fm["ceil"]    = &fnCeil;
+    fm["round"]   = &fnRound;
+    fm["trunc"]   = &fnTrunc;
+    fm["clamp"]   = &fnClamp;
+
+    fm["erf"]     = &fnErf;
+    fm["erfc"]    = &fnErfc;
+
+    fm["normal"]  = &fnNormal;
+    fm["poisson"] = &fnPoisson;
+
+    fnNames = fm.keys ~ lm.keys;
+    fnNames.sort;
+}
 
 void expNumArgs(ErrDg err, char[] name, size_t n, Value[] args)
 {

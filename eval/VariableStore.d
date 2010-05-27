@@ -11,19 +11,18 @@
 module eval.VariableStore;
 
 import eval.Value;
+import eval.Variables;
 
-class VariableStore
+class VariableStore : Variables
 {
-    alias bool delegate(char[], out Value) ResolveDg;
-
-    ResolveDg   _nextResolve;
+    Variables next;
     Value[char[]] vars;
 
     bool allowRedefine = false;
 
-    this(ResolveDg nextResolve = null, bool allowRedefine = false)
+    this(Variables next = null, bool allowRedefine = false)
     {
-        this._nextResolve = nextResolve;
+        this.next = next;
         this.allowRedefine = allowRedefine;
     }
 
@@ -53,11 +52,56 @@ class VariableStore
         return true;
     }
 
+    int iterate(int delegate(ref char[]) dg)
+    {
+        char[][] names = vars.keys;
+        names.sort;
+
+        int r = 0;
+        foreach( nextName ; &nextIterate )
+        {
+            char[] name;
+
+            while( names.length > 0 && names[0] < nextName )
+            {
+                name = names[0];
+                names = names[1..$];
+                r = dg(name);
+                if( r != 0 )
+                    return r;
+            }
+
+            name = nextName;
+
+            r = dg(name);
+            if( r != 0 )
+                return r;
+        }
+
+        foreach( name ; names )
+        {
+            char[] tmp = name;
+            r = dg(tmp);
+            if( r != 0 )
+                return r;
+        }
+
+        return r;
+    }
+
     bool nextResolve(char[] ident, out Value value)
     {
-        if( _nextResolve )
-            return _nextResolve(ident, value);
+        if( next !is null )
+            return next.resolve(ident, value);
         return false;
+    }
+
+    int nextIterate(int delegate(ref char[]) dg)
+    {
+        if( next !is null )
+            return next.iterate(dg);
+
+        return 0;
     }
 }
 

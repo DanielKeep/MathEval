@@ -22,6 +22,7 @@ import eval.Location;
 import eval.Source;
 import eval.TokenStream;
 import eval.Value;
+import eval.Variables;
 
 class Stop : Exception
 {
@@ -96,11 +97,16 @@ int main(char[][] argv)
             variables[ident] = value;
             return true;
         }
+
+        int iterate(int delegate(ref char[]) dg)
+        {
+            return 0; // don't care
+        }
         
-        scope vars = new BuiltinVariables(&resolve, &define);
-        scope funcs = new BuiltinFunctions;
-        scope eval = new AstEvalVisitor(&error,
-                &vars.resolve, &vars.define, &funcs.eval);
+        scope vars = new VariablesDelegate(&resolve, &define, &iterate);
+        scope bivars = new BuiltinVariables(vars);
+        scope bifuncs = new BuiltinFunctions;
+        scope eval = new AstEvalVisitor(&error, bivars, bifuncs);
         result = eval.visitBase(script);
     }
     catch( Stop )

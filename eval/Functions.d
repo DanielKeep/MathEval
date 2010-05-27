@@ -37,9 +37,13 @@ interface Functions
 
 class FunctionsDelegate : Functions
 {
-    this(typeof(&this.invoke) invokeDg)
+    alias bool delegate(char[], ErrDg, size_t, ArgDg, out Value) InvokeDg;
+    alias int delegate(int delegate(ref char[])) IterateDg;
+
+    this(InvokeDg invokeDg, IterateDg iterateDg)
     {
         this.invokeDg = invokeDg;
+        this.iterateDg = iterateDg;
     }
 
     bool invoke(char[] ident, ErrDg err, size_t args, ArgDg getArg,
@@ -48,6 +52,12 @@ class FunctionsDelegate : Functions
         return this.invokeDg(ident, err, args, getArg, result);
     }
 
-    protected typeof(&this.invoke) invokeDg;
+    int iterate(int delegate(ref char[]) dg)
+    {
+        return this.iterateDg(dg);
+    }
+
+    protected InvokeDg invokeDg;
+    protected IterateDg iterateDg;
 }
 
