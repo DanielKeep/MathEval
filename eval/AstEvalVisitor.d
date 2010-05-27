@@ -91,8 +91,8 @@ class AstEvalVisitor
 
     Value visit(AstBinaryExpr node)
     {
-        auto lhs = visitBase(node.lhs);
-        auto rhs = visitBase(node.rhs);
+        Value lhs() { return visitBase(node.lhs); }
+        Value rhs() { return visitBase(node.rhs); }
         alias AstBinaryExpr.Op Op;
 
         void opErr(char[] fmt, ...)
@@ -116,8 +116,8 @@ class AstEvalVisitor
             case Op.Mod:    return binMod(&opErr, lhs, rhs);
             case Op.Rem:    return binRem(&opErr, lhs, rhs);
             case Op.Exp:    return binExp(&opErr, lhs, rhs);
-            case Op.And:    return binAnd(&opErr, lhs, rhs);
-            case Op.Or:     return binOr(&opErr, lhs, rhs);
+            case Op.And:    return binAnd(&opErr, lhs, &rhs);
+            case Op.Or:     return binOr(&opErr, lhs, &rhs);
             default:        assert(false);
         }
     }
@@ -326,24 +326,38 @@ Value binExp(OpErr err, Value lhs, Value rhs)
                 lhs.tagName, rhs.tagName);
 }
 
-Value binAnd(OpErr err, Value lhs, Value rhs)
+Value binAnd(OpErr err, Value lhs, Value delegate() rhsDg)
 {
-    if( lhs.isLogical && rhs.isLogical )
-        return Value(lhs.asLogical && rhs.asLogical);
-    
+    if( lhs.isLogical )
+    {
+        auto l = lhs.asLogical;
+        if( !l ) return Value(false);
+
+        auto rhs = rhsDg();
+        if( !rhs.isLogical )
+            err("invalid right-hand type for logical and: {}", rhs.tagName);
+
+        return Value(rhs.asLogical);
+    }
     else
-        err("invalid types for logical and: {} and {}",
-                lhs.tagName, rhs.tagName);
+        err("invalid left-hand type for logical and: {}", lhs.tagName);
 }
 
-Value binOr(OpErr err, Value lhs, Value rhs)
+Value binOr(OpErr err, Value lhs, Value delegate() rhsDg)
 {
-    if( lhs.isLogical && rhs.isLogical )
-        return Value(lhs.asLogical || rhs.asLogical);
-    
+    if( lhs.isLogical )
+    {
+        auto l = lhs.asLogical;
+        if( l ) return Value(true);
+
+        auto rhs = rhsDg();
+        if( !rhs.isLogical )
+            err("invalid right-hand type for logical or: {}", rhs.tagName);
+
+        return Value(rhs.asLogical);
+    }
     else
-        err("invalid types for logical or: {} and {}",
-                lhs.tagName, rhs.tagName);
+        err("invalid left-hand type for logical or: {}", lhs.tagName);
 }
 
 Value unPos(OpErr err, Value val)

@@ -307,6 +307,13 @@ Symbol  Meaning                     Prec.   Assoc.  Alternatives
 ``or``  Logical disjunction         3.8     left
 ======= =========================== ======= ======= ===============
 
+Note that both logical operators are short-circuited; that is, they will only
+evaluate their right-hand side if the result cannot be determined by the
+left-hand side.
+
+For example, ``and`` will short-circuit at the first false encountered and
+``or`` will short-circuit at the first true encountered.
+
 Constants
 =========
 
