@@ -10,6 +10,7 @@ import eval.Functions;
 import eval.Statistical : rand, uniformReal;
 import eval.Value;
 
+import tango.io.Stdout;
 import tango.math.ErrorFunction;
 import tango.math.Math;
 import tango.math.Probability;
@@ -162,6 +163,17 @@ static this()
     fm["normal"]  = &fnNormal;
     fm["poisson"] = &fnPoisson;
 
+    fm["print"]   = &fnPrint;
+    fm["printLn"] = &fnPrintLn;
+
+    fm["concat"]  = &fnConcat;
+    fm["join"]    = &fnJoin;
+
+    fm["type"]    = &fnType;
+    fm["bool"]    = &fnBool;
+    fm["real"]    = &fnReal;
+    fm["string"]  = &fnString;
+
     fnNames = fm.keys ~ lm.keys;
     fnNames.sort;
 }
@@ -184,6 +196,14 @@ void expReal(ErrDg err, char[] name, Value[] args, size_t offset=0)
     foreach( i, arg ; args )
         if( !arg.isReal )
             err("{}: expected real for argument {}, got {}",
+                    name, (offset+i+1), arg.tagName);
+}
+
+void expString(ErrDg err, char[] name, Value[] args, size_t offset=0)
+{
+    foreach( i, arg ; args )
+        if( !arg.isString )
+            err("{}: expected string for argument {}, got {}",
                     name, (offset+i+1), arg.tagName);
 }
 
@@ -375,5 +395,145 @@ Value fnPoisson(ErrDg err, Value[] args)
     }
 
     return Value(poisson(λ, min, max));
+}
+
+// String
+
+Value fnConcat(ErrDg err, Value[] args)
+{
+    expMinArgs(err, "concat", 2, args);
+    expString(err, "concat", args);
+
+    char[] s;
+
+    foreach( arg ; args )
+        s ~= arg.asString;
+
+    return Value(s);
+}
+
+Value fnJoin(ErrDg err, Value[] args)
+{
+    expMinArgs(err, "join", 3, args);
+    expString(err, "join", args);
+
+    auto sep = args[0].asString;
+    auto parts = args[1..$];
+
+    auto s = parts[0].asString;
+    foreach( arg ; parts[1..$] )
+    {
+        s ~= sep;
+        s ~= arg.asString;
+    }
+
+    return Value(s);
+}
+
+// Output & Formatting
+
+Value fnPrint(ErrDg err, Value[] args)
+{
+    expMinArgs(err, "print", 1, args);
+
+    foreach( arg ; args )
+    {
+        if( arg.isString )
+            Stdout(arg.asString);
+        else
+            Stdout(arg.toString);
+    }
+    Stdout.flush;
+
+    return Value();
+}
+
+Value fnPrintLn(ErrDg err, Value[] args)
+{
+    fnPrint(err, args);
+    Stdout.newline;
+    return Value();
+}
+
+// Meta
+
+Value fnType(ErrDg err, Value[] args)
+{
+    expNumArgs(err, "type", 1, args);
+
+    return Value(args[0].tagName);
+}
+
+Value fnBool(ErrDg err, Value[] args)
+{
+    expNumArgs(err, "bool", 1, args);
+
+    auto arg = args[0];
+    switch( arg.tag )
+    {
+        case Value.Tag.Logical:
+            return arg;
+
+        case Value.Tag.Real:
+            return Value( !( arg.asLogical != 0.0 ) );
+
+        case Value.Tag.String:
+            switch( arg.asString )
+            {
+                case "true":    return Value(true);
+                case "false":   return Value(false);
+                default:        err("bool: invalid value {}", arg.toString);
+            }
+
+        default:
+            err("bool: invalid value {}", arg.toString);
+    }
+}
+
+Value fnReal(ErrDg err, Value[] args)
+{
+    expNumArgs(err, "real", 1, args);
+
+    auto arg = args[0];
+    switch( arg.tag )
+    {
+        case Value.Tag.Logical:
+            return Value(arg.asLogical ? 1.0 : 0.0);
+
+        case Value.Tag.Real:
+            return arg;
+
+        case Value.Tag.String:
+        {
+            uint ate;
+            auto v = Float.parse(arg.asString, &ate);
+            if( ate == 0 )
+                err("real: invalid value {}", arg.toString);
+            return Value(v);
+        }
+        default:
+            err("real: invalid value {}", arg.toString);
+    }
+}
+
+Value fnString(ErrDg err, Value[] args)
+{
+    expNumArgs(err, "string", 1, args);
+
+    auto arg = args[0];
+    switch( arg.tag )
+    {
+        case Value.Tag.Logical:
+            return Value(arg.toString);
+
+        case Value.Tag.Real:
+            return Value(arg.toString);
+
+        case Value.Tag.String:
+            return arg;
+
+        default:
+            err("string: invalid value {}", arg.toString);
+    }
 }
 

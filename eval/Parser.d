@@ -6,12 +6,10 @@
 */
 module eval.Parser;
 
-import Float    = tango.text.convert.Float;
-import Integer  = tango.text.convert.Integer;
-import Utf      = tango.text.convert.Utf;
 import eval.Ast;
 import eval.Tokens;
 import eval.TokenStream;
+import eval.Util : parseReal, parseString;
 
 AstScript parseScript(TokenStream ts)
 {
@@ -311,7 +309,7 @@ AstExpr tryparseNumberExpr(TokenStream ts)
     if( ts.peek.type != TOKnumber ) return null;
 
     auto loc = ts.peek.loc;
-    real value = parseReal(ts);
+    real value = parseReal(ts.popExpect(TOKnumber).text);
     auto expr = new AstNumberExpr(loc, value);
 
     if( auto var = tryparseVariableExpr(ts) )
@@ -325,7 +323,7 @@ AstExpr tryparseStringExpr(TokenStream ts)
     if( ts.peek.type != TOKstring ) return null;
 
     auto loc = ts.peek.loc;
-    char[] value = parseString(ts);
+    char[] value = parseString(ts.popExpect(TOKstring).text);
     return new AstStringExpr(loc, value);
 }
 
@@ -447,77 +445,6 @@ AstUniformExpr tryparseUniformExpr(TokenStream ts)
     ui = (ts.popExpectAny(TOKrparen,TOKrbracket).type == TOKrbracket);
 
     return new AstUniformExpr(loc, li, ui, le, ue);
-}
-
-real parseReal(TokenStream ts)
-{
-    auto t = ts.popExpect(TOKnumber);
-    return Float.parse(t.text);
-}
-
-char[] parseString(TokenStream ts)
-{
-    char[] r;
-    char[] s = ts.popExpect(TOKstring).text;
-    assert( s.length >= 2 );
-    assert( s[0] == '"' );
-    assert( s[$-1] == '"' );
-    s = s[1..$-1];
-
-    while( s.length > 0 )
-    {
-        if( s[0] == '\\' )
-        {
-            auto c = s[1];
-            dchar ec;
-            s = s[2..$];
-            switch( c )
-            {
-                case 'a':   ec = '\a'; break;
-                case 'b':   ec = '\b'; break;
-                case 'f':   ec = '\f'; break;
-                case 'n':   ec = '\n'; break;
-                case 'r':   ec = '\r'; break;
-                case 't':   ec = '\t'; break;
-                case 'v':   ec = '\v'; break;
-                case '\'':  ec = '\''; break;
-                case '"':   ec = '"'; break;
-                case '?':   ec = '\x1b'; break;
-                case '\\':  ec = '\\'; break;
-
-                case 'x':
-                    ec = cast(dchar) Integer.convert(s[0..2], 16);
-                    s = s[2..$];
-                    break;
-
-                case 'u':
-                    ec = cast(dchar) Integer.convert(s[0..4], 16);
-                    s = s[4..$];
-                    break;
-
-                case 'U':
-                    ec = cast(dchar) Integer.convert(s[0..8], 16);
-                    s = s[8..$];
-                    break;
-
-                default:
-                    assert(false);
-            }
-            char[8] buffer;
-            r ~= Utf.encode(buffer, ec);
-        }
-        else
-        {
-            size_t i=1;
-            while( i < s.length && s[i] != '\\' )
-                ++i;
-
-            r ~= s[0..i];
-            s = s[i..$];
-        }
-    }
-
-    return r;
 }
 
 AstExpr tryparseSubExpr(TokenStream ts)
