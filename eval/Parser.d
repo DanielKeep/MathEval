@@ -312,7 +312,9 @@ AstExpr tryparseNumberExpr(TokenStream ts)
     real value = parseReal(ts.popExpect(TOKnumber).text);
     auto expr = new AstNumberExpr(loc, value);
 
-    if( auto var = tryparseVariableExpr(ts) )
+    if( auto func = tryparseFunctionExpr(ts) )
+        return new AstBinaryExpr(loc, AstBinaryExpr.Op.Mul, expr, func);
+    else if( auto var = tryparseVariableExpr(ts) )
         return new AstBinaryExpr(loc, AstBinaryExpr.Op.Mul, expr, var);
     else
         return expr;

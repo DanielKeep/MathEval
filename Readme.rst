@@ -151,6 +151,15 @@ comma.  For example::
 
     min(1.4, 7.3)
 
+You can also place a number literal immediately before a function call; this
+will be interpreted as an implicit multiplication.  For example::
+
+    3cos(pi/3)
+
+This is equivalent to::
+
+    3*cos(pi/3)
+
 For a complete list of supported functions, see `Functions`_.
 
 Variable Expressions
@@ -672,7 +681,10 @@ The grammar is otherwise complete.
                       | <sub expression>
                       ;
 
-    <number expression> = <number>, [ <variable expression> ];
+    <number expression> = <number>
+                        | <number>, <function expression>
+                        | <number>, <variable expression>
+                        ;
 
     <string expression> = <string>;
 
