@@ -170,7 +170,7 @@ static this()
     fm["join"]    = &fnJoin;
 
     fm["type"]    = &fnType;
-    fm["bool"]    = &fnBool;
+    fm["logical"] = &fnLogical;
     fm["real"]    = &fnReal;
     fm["string"]  = &fnString;
 
@@ -464,9 +464,9 @@ Value fnType(ErrDg err, Value[] args)
     return Value(args[0].tagName);
 }
 
-Value fnBool(ErrDg err, Value[] args)
+Value fnLogical(ErrDg err, Value[] args)
 {
-    expNumArgs(err, "bool", 1, args);
+    expNumArgs(err, "logical", 1, args);
 
     auto arg = args[0];
     switch( arg.tag )
@@ -475,18 +475,18 @@ Value fnBool(ErrDg err, Value[] args)
             return arg;
 
         case Value.Tag.Real:
-            return Value( !( arg.asLogical != 0.0 ) );
+            return Value( !( arg.asReal == 0.0 ) );
 
         case Value.Tag.String:
             switch( arg.asString )
             {
                 case "true":    return Value(true);
                 case "false":   return Value(false);
-                default:        err("bool: invalid value {}", arg.toString);
+                default:        err("logical: invalid value {}", arg.toString);
             }
 
         default:
-            err("bool: invalid value {}", arg.toString);
+            err("logical: invalid value {}", arg.toString);
     }
 }
 
