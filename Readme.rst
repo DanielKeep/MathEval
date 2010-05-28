@@ -327,6 +327,7 @@ Name            Meaning                 Value (to 19 decimal digits)
 ``phi``, ``φ``  Golden ratio            1.618,033,988,749,894,848
 ``inf``         Infinity                ∞
 ``nan``         Not-a-Number [*]_
+``nil``         Nil [*]_
 ``true``        Tautology               ⊤
 ``false``       Contradiction           ⊥
 =============== ======================= ================================
@@ -336,6 +337,8 @@ Name            Meaning                 Value (to 19 decimal digits)
         *sqrt*\ (-1), in contexts without imaginary numbers, evaluates to
         ``nan``.  As does *inf* − *inf*.
 
+.. [*]  Nil is used to represent the complete *absence* of a value.
+
 Functions
 =========
 
@@ -344,6 +347,7 @@ Functions are defined using the following placeholder variables:
 * ``a``, ``b``, ``c`` - arbitrary values of any type.
 * ``x``, ``y``, ``z`` - arbitrary real numbers.
 * ``l`` - a logical value.
+* ``s`` - a string.
 * ``...`` - indicates that the function takes "more of the same": an arbitrary
   number of additional parameters.
 
@@ -429,6 +433,40 @@ Name                Description
 ``if(l,a,b)``       Returns *a* if *l* is true, *b* otherwise.  Note
                     that this function is *lazy*; that is, it does not
                     evaluate a parameter unless it is used.
+=================== ===========================================================
+
+String
+------
+
+======================= =======================================================
+Name                    Description
+======================= =======================================================
+``concat(s1,s2,...)``   Concatenates two or more strings together.
+``join(s,s1,s2,...)``   Concatenates two or more strings together, placing *s*
+                        between each argument.
+======================= =======================================================
+
+Output
+------
+
+======================= =======================================================
+Name                    Description
+======================= =======================================================
+``print(a,...)``        Prints its arguments to the terminal.
+``printLn(a,...)``      Prints its arguments to the terminal, adding a line
+                        break at the end.
+======================= =======================================================
+
+Types
+-----
+
+=================== ===========================================================
+Name                Description
+=================== ===========================================================
+``type(a)``         Returns the type of *a* as a string.
+``logical(a)``      Returns *a* converted to a logical value.
+``real(a)``         Returns *a* converted to a real value.
+``string(a)``       Returns *a* converted to a string value.
 =================== ===========================================================
 
 Specification
