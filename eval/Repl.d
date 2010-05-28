@@ -11,6 +11,7 @@ import tango.io.Stdout;
 import tango.text.convert.Format;
 
 import eval.Ast;
+import eval.AstDumpVisitor;
 import eval.AstEvalVisitor;
 import eval.BuiltinFunctions;
 import eval.BuiltinVariables;
@@ -18,6 +19,7 @@ import eval.Parser;
 import eval.Lexer;
 import eval.Location;
 import eval.Source;
+import eval.StructuredOutput;
 import eval.TokenStream;
 import eval.Value;
 import eval.VariableStore;
@@ -109,6 +111,40 @@ replLoop:
                 continue replLoop;
 
             default:
+            {
+                char[] tail;
+                auto cmd = line.headTail(tail);
+                switch( cmd )
+                {
+                    case ".ast":
+                    {
+                        AstStmt stmt;
+                        try
+                        {
+                            scope ts = new TokenStream(
+                                    new Source(name, tail),
+                                    &lexNext, &error);
+                            stmt = parseStmt(ts);
+                        }
+                        catch( Stop _ )
+                        {
+                            continue replLoop;
+                        }
+
+                        scope so = new StructuredOutput(Cout.output);
+                        scope dump = new AstDumpVisitor(so);
+                        dump.visitBase(stmt);
+                        continue replLoop;
+                    }
+                    case ".lex":
+                    {
+                        foreach( token ; lexIter(name, tail) )
+                            Stdout("  ")(token).newline;
+                        continue replLoop;
+                    }
+                    default:
+                }
+            }
         }
 
         // Parse
@@ -143,5 +179,29 @@ replLoop:
         if( ! result.isInvalid )
             Stdout(result.toString).newline;
     }
+}
+
+bool startsWith(char[] s, char[] test)
+{
+    return s.length >= test.length && s[0..test.length] == test;
+}
+
+char[] headTail(char[] s, out char[] tail)
+{
+    char[] r;
+    foreach( i,c ; s )
+    {
+        if( (c == ' ' || c == '\t') && r is null )
+            r = s[0..i];
+
+        if( !(c == ' ' || c == '\t') && r !is null )
+        {
+            tail = s[i..$];
+            return r;
+        }
+    }
+    if( r is null )
+        r = s;
+    return r;
 }
 
