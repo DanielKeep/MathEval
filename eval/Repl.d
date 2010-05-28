@@ -176,7 +176,7 @@ replLoop:
         }
         if( contLoop ) continue;
 
-        if( ! result.isInvalid )
+        if( ! result.isNil )
             Stdout(result.toString).newline;
     }
 }

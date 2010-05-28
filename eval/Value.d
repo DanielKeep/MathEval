@@ -23,7 +23,7 @@ struct Value
 {
     enum Tag
     {
-        Invalid,
+        Nil,
         Logical,
         Real,
         String,
@@ -68,9 +68,9 @@ struct Value
         return r;
     }
 
-    bool isInvalid()
+    bool isNil()
     {
-        return tag == Tag.Invalid;
+        return tag == Tag.Nil;
     }
 
     bool isLogical()
@@ -110,7 +110,7 @@ struct Value
     {
         switch( tag )
         {
-            case Tag.Invalid:   return "invalid";
+            case Tag.Nil:       return "nil";
             case Tag.Logical:   return "logical";
             case Tag.Real:      return "real";
             case Tag.String:    return "string";
@@ -122,7 +122,7 @@ struct Value
     {
         switch( tag )
         {
-            case Tag.Invalid:   return "<<invalid>>";
+            case Tag.Nil:       return "nil";
             case Tag.Logical:   return data.l ? "true" : "false";
             case Tag.Real:      return Float.truncate(
                                         Float.toString(data.r, FloatDP));
