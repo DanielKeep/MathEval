@@ -41,6 +41,8 @@ class AstEvalVisitor
             return visit(stn);
         if( auto stn = cast(AstNumberExpr) node )
             return visit(stn);
+        if( auto stn = cast(AstStringExpr) node )
+            return visit(stn);
         if( auto stn = cast(AstBinaryExpr) node )
             return visit(stn);
         if( auto stn = cast(AstUnaryExpr) node )
@@ -85,6 +87,11 @@ class AstEvalVisitor
     }
 
     Value visit(AstNumberExpr node)
+    {
+        return Value(node.value);
+    }
+
+    Value visit(AstStringExpr node)
     {
         return Value(node.value);
     }

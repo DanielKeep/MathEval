@@ -14,6 +14,7 @@ const char[][] AstNodeNames =
     "AstLetStmt",
     "AstExprStmt",
     "AstNumberExpr",
+    "AstStringExpr",
     "AstBinaryExpr",
     "AstUnaryExpr",
     "AstVariableExpr",
@@ -93,6 +94,17 @@ class AstNumberExpr : AstExpr
     real value;
 
     this(Location loc, real value)
+    {
+        super(loc);
+        this.value = value;
+    }
+}
+
+class AstStringExpr : AstExpr
+{
+    char[] value;
+
+    this(Location loc, char[] value)
     {
         super(loc);
         this.value = value;

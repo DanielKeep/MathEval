@@ -11,6 +11,8 @@
 */
 module eval.Value;
 
+import eval.Util : toStringLiteral;
+
 import tango.util.Convert : to;
 import Float = tango.text.convert.Float;
 
@@ -24,12 +26,14 @@ struct Value
         Invalid,
         Logical,
         Real,
+        String,
     }
 
     union Data
     {
         bool l;
         real r;
+        char[] s;
     }
 
     Tag tag;
@@ -56,6 +60,14 @@ struct Value
         return r;
     }
 
+    static Value opCall(char[] v)
+    {
+        Value r;
+        r.tag = Tag.String;
+        r.data.s = v;
+        return r;
+    }
+
     bool isInvalid()
     {
         return tag == Tag.Invalid;
@@ -71,6 +83,11 @@ struct Value
         return tag == Tag.Real;
     }
 
+    bool isString()
+    {
+        return tag == Tag.String;
+    }
+
     bool asLogical()
     {
         assert( tag == Tag.Logical );
@@ -83,6 +100,12 @@ struct Value
         return data.r;
     }
 
+    char[] asString()
+    {
+        assert( tag == Tag.String );
+        return data.s;
+    }
+
     char[] tagName()
     {
         switch( tag )
@@ -90,6 +113,7 @@ struct Value
             case Tag.Invalid:   return "invalid";
             case Tag.Logical:   return "logical";
             case Tag.Real:      return "real";
+            case Tag.String:    return "string";
             default:            return "unknown("~to!(char[])(tag)~")";
         }
     }
@@ -102,6 +126,7 @@ struct Value
             case Tag.Logical:   return data.l ? "true" : "false";
             case Tag.Real:      return Float.truncate(
                                         Float.toString(data.r, FloatDP));
+            case Tag.String:    return toStringLiteral(data.s);
             default:            return "<<unknown("~to!(char[])(tag)~")>>";
         }
     }

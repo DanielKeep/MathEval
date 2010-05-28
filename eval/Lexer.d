@@ -497,6 +497,97 @@ bool lexNumber(Source src, LexErr err, out Token token)
     return true;
 }
 
+bool lexString(Source src, LexErr err, out Token token)
+{
+    if( src[0] != '"' )
+        return false;
+
+    void eatHexDigits(size_t n)
+    {
+        while( n --> 0 )
+        {
+            auto cp = src[0];
+            switch( cp )
+            {
+                case '0': case '1': case '2': case '3': case '4':
+                case '5': case '6': case '7': case '8': case '9':
+                case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+                case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+                    break;
+
+                default:
+                    err(src.loc, "expected hex digit for escape, not '{}'",
+                            cp);
+            }
+            src.advance;
+        }
+    }
+
+    void eatEscape()
+    {
+        auto cp0 = src[0];
+        switch( cp0 )
+        {
+            case 'a':
+            case 'b':
+            case 'f':
+            case 'n':
+            case 'r':
+            case 't':
+            case 'v':
+            case '\'':
+            case '"':
+            case '?':
+            case '\\':
+                src.advance;
+                break;
+
+            case 'x':
+                src.advance;
+                eatHexDigits(2);
+                break;
+
+            case 'u':
+                src.advance;
+                eatHexDigits(4);
+                break;
+
+            case 'U':
+                src.advance;
+                eatHexDigits(8);
+                break;
+
+            default:
+                err(src.loc, "invalid string escape character '{}'", cp0);
+        }
+    }
+
+    auto loc = src.loc;
+    auto mark = src.save;
+
+    src.advance;
+
+    while( src[0] != '"' )
+    {
+        if( src[0] == '\\' )
+        {
+            src.advance;
+            eatEscape;
+        }
+        else if( src[0] == dchar.init )
+        {
+            err(loc, "unterminated string literal");
+        }
+        else
+            src.advance;
+    }
+
+    src.advance;
+
+    token = Token(loc, TOKstring, src.sliceFrom(mark));
+    return true;
+}
+
 bool lexNext(Source src, LexErr err, out Token token)
 {
     skipWhitespace(src, err);
@@ -507,6 +598,7 @@ bool lexNext(Source src, LexErr err, out Token token)
     if( lexLiteral(src, err, token) )       return true;
     if( lexIdentifier(src, err, token) )    return true;
     if( lexNumber(src, err, token) )        return true;
+    if( lexString(src, err, token) )        return true;
     
     return false;
 }

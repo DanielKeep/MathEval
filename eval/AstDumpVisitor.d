@@ -10,6 +10,7 @@ module eval.AstDumpVisitor;
 
 import eval.Ast;
 import eval.StructuredOutput;
+import eval.Util : toStringLiteral;
 
 class AstDumpVisitor
 {
@@ -29,6 +30,8 @@ class AstDumpVisitor
         if( auto stn = cast(AstExprStmt) node )
             return visit(stn);
         if( auto stn = cast(AstNumberExpr) node )
+            return visit(stn);
+        if( auto stn = cast(AstStringExpr) node )
             return visit(stn);
         if( auto stn = cast(AstBinaryExpr) node )
             return visit(stn);
@@ -95,6 +98,11 @@ class AstDumpVisitor
     void visit(AstNumberExpr node)
     {
         so.f("{}", node.value);
+    }
+
+    void visit(AstStringExpr node)
+    {
+        so.f("{}", toStringLiteral(node.value));
     }
 
     void visit(AstBinaryExpr node)

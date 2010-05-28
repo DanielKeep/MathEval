@@ -51,6 +51,7 @@ const char[][] LiteralTokens =
 const char[][] OtherTokens =
 [
     "number",
+    "string",
     "ident",
     "eol",
     "eos",

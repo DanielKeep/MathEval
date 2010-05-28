@@ -565,6 +565,37 @@ Number
            └─'E'─┘ ├─'+'─┘ └───────┘ ╧
                    └─'-'─┘
 
+String
+``````
+
+::
+
+    string
+        >>─'"'───+─'\'─╢ escape ╟─┬─'"'─┐
+               │ └────── * ───────┐     ╧
+               └──────────────────┘
+
+    escape
+        >>─┬─'U'─╢ hex digit * 8 ╟───┐
+           ├─'u'─╢ hex digit * 4 ╟─┘ ╧
+           ├─'x'─╢ hex digit * 2 ╟─┘
+           ├──────────'a'──────────┘
+           ├──────────'b'──────────┘
+           ├──────────'f'──────────┘
+           ├──────────'n'──────────┘
+           ├──────────'r'──────────┘
+           ├──────────'t'──────────┘
+           ├──────────'v'──────────┘
+           ├──────────'''──────────┘
+           ├──────────'"'──────────┘
+           ├──────────'?'──────────┘
+           └──────────'\'──────────┘
+
+    hex digit
+        >>─┬─ digit ───┐
+           ├──'a..f'─┘ ╧
+           └──'A..F'─┘
+
 Grammar
 -------
 
@@ -595,6 +626,7 @@ The grammar is otherwise complete.
     <expression> = <expression atom>, { <binary op>, <expression atom> };
 
     <expression atom> = <number expression>
+                      | <string expression>
                       | <unary expression>
                       | <function expression>
                       | <variable expression>
@@ -603,6 +635,8 @@ The grammar is otherwise complete.
                       ;
 
     <number expression> = <number>, [ <variable expression> ];
+
+    <string expression> = <string>;
 
     <unary expression> = <unary op>, <expression atom>;
 
