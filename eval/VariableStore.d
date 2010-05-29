@@ -52,36 +52,40 @@ class VariableStore : Variables
         return true;
     }
 
-    int iterate(int delegate(ref char[]) dg)
+    int iterate(int delegate(ref char[], ref Value) dg)
     {
         char[][] names = vars.keys;
         names.sort;
 
         int r = 0;
-        foreach( nextName ; &nextIterate )
+        foreach( nextName, nextValue ; &nextIterate )
         {
             char[] name;
+            Value value;
 
             while( names.length > 0 && names[0] < nextName )
             {
                 name = names[0];
+                value = vars[name];
                 names = names[1..$];
-                r = dg(name);
+                r = dg(name, value);
                 if( r != 0 )
                     return r;
             }
 
             name = nextName;
+            value = nextValue;
 
-            r = dg(name);
+            r = dg(name, value);
             if( r != 0 )
                 return r;
         }
 
         foreach( name ; names )
         {
-            char[] tmp = name;
-            r = dg(tmp);
+            auto tmpN = name;
+            auto tmpV = vars[tmpN];
+            r = dg(tmpN, tmpV);
             if( r != 0 )
                 return r;
         }
@@ -96,7 +100,7 @@ class VariableStore : Variables
         return false;
     }
 
-    int nextIterate(int delegate(ref char[]) dg)
+    int nextIterate(int delegate(ref char[], ref Value) dg)
     {
         if( next !is null )
             return next.iterate(dg);

@@ -29,14 +29,14 @@ interface Variables
     /**
         Iterates over all defined variables.
     */
-    int iterate(int delegate(ref char[]) dg);
+    int iterate(int delegate(ref char[], ref Value) dg);
 }
 
 class VariablesDelegate : Variables
 {
     alias bool delegate(char[], out Value) ResolveDg;
     alias bool delegate(char[], ref Value) DefineDg;
-    alias int delegate(int delegate(ref char[])) IterateDg;
+    alias int delegate(int delegate(ref char[], ref Value)) IterateDg;
 
     this(ResolveDg resolveDg, DefineDg defineDg, IterateDg iterateDg)
     {
@@ -55,7 +55,7 @@ class VariablesDelegate : Variables
         return defineDg(ident, value);
     }
 
-    int iterate(int delegate(ref char[]) dg)
+    int iterate(int delegate(ref char[], ref Value) dg)
     {
         return iterateDg(dg);
     }

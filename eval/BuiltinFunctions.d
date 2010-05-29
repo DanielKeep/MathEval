@@ -6,85 +6,76 @@
 */
 module eval.BuiltinFunctions;
 
-import eval.Functions;
 import eval.Statistical : rand, uniformReal;
 import eval.Value;
+import eval.Variables;
 
 import tango.io.Stdout;
 import tango.math.ErrorFunction;
 import tango.math.Math;
 import tango.math.Probability;
 
-class BuiltinFunctions : Functions
+class BuiltinFunctions : Variables
 {
-    Functions next;
+    Variables next;
 
-    this(Functions next = null)
+    this(Variables next = null)
     {
         this.next = next;
     }
 
-    bool invoke(char[] ident, ErrDg err,
-            size_t args, ArgDg getArg, out Value result)
+    override bool resolve(char[] ident, out Value value)
     {
-        Value function(ErrDg, Value[]) fn;
-        Value function(ErrDg, size_t, Value delegate(size_t)) lazyFn;
-
-        if( auto fptr = ident in fnMap )
-            fn = *fptr;
-
-        else if( auto fptr = ident in lazyFnMap )
-            lazyFn = *fptr;
-
-        else
-            return nextInvoke(ident, err, args, getArg, result);
-
-        if( fn !is null )
+        if( auto fvptr = ident in fnMap )
         {
-            auto vs = new Value[args];
-            foreach( i, ref v ; vs )
-                v = getArg(i);
-
-            result = fn(err, vs);
+            value = Value(*fvptr);
+            return true;
         }
-        else if( lazyFn !is null )
-            result = lazyFn(err, args, getArg);
-        
         else
-            assert(false);
-
-        return true;
+            return nextResolve(ident, value);
     }
 
-    int iterate(int delegate(ref char[]) dg)
+    override bool define(char[] ident, ref Value value)
+    {
+        if( !!( ident in fnMap ) )
+            return false;
+        else
+            return nextDefine(ident, value);
+    }
+
+    int iterate(int delegate(ref char[], ref Value) dg)
     {
         auto names = fnNames;
 
         int r = 0;
-        foreach( nextName ; &nextIterate )
+        foreach( nextName, nextValue ; &nextIterate )
         {
             char[] name;
+            Value value;
 
             while( names.length > 0 && names[0] < nextName )
             {
                 name = names[0];
+                value = Value(fnMap[name]);
                 names = names[1..$];
-                r = dg(name);
+                r = dg(name, value);
                 if( r != 0 )
                     return r;
             }
 
             name = nextName;
+            value = nextValue;
 
-            r = dg(name);
+            r = dg(name, value);
             if( r != 0 )
                 return r;
         }
 
         foreach( name ; names )
         {
-            char[] tmp = name;
-            r = dg(tmp);
+            auto tmpN = name;
+            auto tmpV = Value(fnMap[tmpN]);
+            r = dg(tmpN, tmpV);
             if( r != 0 )
                 return r;
         }
@@ -92,15 +83,21 @@ class BuiltinFunctions : Functions
         return r;
     }
 
-    bool nextInvoke(char[] ident, ErrDg err,
-            size_t args, ArgDg getArg, out Value result)
+    bool nextResolve(char[] ident, out Value value)
     {
         if( next !is null )
-            return next.invoke(ident, err, args, getArg, result);
+            return next.resolve(ident, value);
         return false;
     }
 
-    int nextIterate(int delegate(ref char[]) dg)
+    bool nextDefine(char[] ident, ref Value value)
+    {
+        if( next !is null )
+            return next.define(ident, value);
+        return false;
+    }
+
+    int nextIterate(int delegate(ref char[], ref Value) dg)
     {
         if( next !is null )
             return next.iterate(dg);
@@ -110,117 +107,142 @@ class BuiltinFunctions : Functions
 
 private:
 
-alias void delegate(char[], ...) ErrDg;
-alias Value function(ErrDg, Value[]) Fn;
-alias Value function(ErrDg, size_t, Value delegate(size_t)) LazyFn;
+alias FunctionValue.ErrDg ErrDg;
+alias FunctionValue.ArgDg ArgDg;
 
-Fn[char[]] fnMap;
-LazyFn[char[]] lazyFnMap;
+alias FunctionValue.NativeFn Fn;
+FunctionValue[char[]] fnMap;
 char[][] fnNames;
+
+FunctionValue mk(Fn fn, char[][] args...)
+{
+    auto f = new FunctionValue;
+    f.nativeFn = fn;
+    f.args.length = args.length;
+    foreach( i, arg ; args )
+        f.args[i].name = arg;
+    return f;
+}
 
 static this()
 {
     alias fnMap fm;
-    alias lazyFnMap lm;
 
-    lm["if"]      = &fnIf;
+    fm["if"]      = mk(&fnIf, "l", "a", "b");
 
-    fm["abs"]     = &fnAbs;
-    fm["min"]     = &fnMin;
-    fm["max"]     = &fnMax;
+    fm["abs"]     = mk(&fnAbs, "x");
+    fm["min"]     = mk(&fnMin, "x", "y", "...");
+    fm["max"]     = mk(&fnMax, "x", "y", "...");
             
-    fm["cos"]     = &fnCos;
-    fm["sin"]     = &fnSin;
-    fm["tan"]     = &fnTan;
+    fm["cos"]     = mk(&fnCos, "x");
+    fm["sin"]     = mk(&fnSin, "x");
+    fm["tan"]     = mk(&fnTan, "x");
 
-    fm["acos"]    = &fnAcos;
-    fm["asin"]    = &fnAsin;
-    fm["atan"]    = &fnAtan;
-    fm["atan2"]   = &fnAtan2;
+    fm["acos"]    = mk(&fnAcos, "x");
+    fm["asin"]    = mk(&fnAsin, "x");
+    fm["atan"]    = mk(&fnAtan, "x");
+    fm["atan2"]   = mk(&fnAtan2, "x");
 
-    fm["cosh"]    = &fnCosh;
-    fm["sinh"]    = &fnSinh;
-    fm["tanh"]    = &fnTanh;
+    fm["cosh"]    = mk(&fnCosh, "x");
+    fm["sinh"]    = mk(&fnSinh, "x");
+    fm["tanh"]    = mk(&fnTanh, "x");
 
-    fm["acosh"]   = &fnAcosh;
-    fm["asinh"]   = &fnAsinh;
-    fm["atanh"]   = &fnAtanh;
+    fm["acosh"]   = mk(&fnAcosh, "x");
+    fm["asinh"]   = mk(&fnAsinh, "x");
+    fm["atanh"]   = mk(&fnAtanh, "x");
 
-    fm["sqrt"]    = &fnSqrt;
-    fm["log"]     = &fnLog;
-    fm["log2"]    = &fnLog2;
-    fm["log10"]   = &fnLog10;
+    fm["sqrt"]    = mk(&fnSqrt, "x");
+    fm["log"]     = mk(&fnLog, "x");
+    fm["log2"]    = mk(&fnLog2, "x");
+    fm["log10"]   = mk(&fnLog10, "x");
 
-    fm["floor"]   = &fnFloor;
-    fm["ceil"]    = &fnCeil;
-    fm["round"]   = &fnRound;
-    fm["trunc"]   = &fnTrunc;
-    fm["clamp"]   = &fnClamp;
+    fm["floor"]   = mk(&fnFloor, "x");
+    fm["ceil"]    = mk(&fnCeil, "x");
+    fm["round"]   = mk(&fnRound, "x");
+    fm["trunc"]   = mk(&fnTrunc, "x");
+    fm["clamp"]   = mk(&fnClamp, "y", "x", "z");
 
-    fm["erf"]     = &fnErf;
-    fm["erfc"]    = &fnErfc;
+    fm["erf"]     = mk(&fnErf, "x");
+    fm["erfc"]    = mk(&fnErfc, "x");
 
-    fm["normal"]  = &fnNormal;
-    fm["poisson"] = &fnPoisson;
+    fm["normal"]  = mk(&fnNormal, "μ", "σ");
+    fm["poisson"] = mk(&fnPoisson, "λ", "x", "y");
 
-    fm["print"]   = &fnPrint;
-    fm["printLn"] = &fnPrintLn;
+    fm["print"]   = mk(&fnPrint, "a", "...");
+    fm["printLn"] = mk(&fnPrintLn, "a", "...");
 
-    fm["concat"]  = &fnConcat;
-    fm["join"]    = &fnJoin;
+    fm["concat"]  = mk(&fnConcat, "s1", "s2", "...");
+    fm["join"]    = mk(&fnJoin, "s", "s1", "s2", "...");
 
-    fm["type"]    = &fnType;
-    fm["logical"] = &fnLogical;
-    fm["real"]    = &fnReal;
-    fm["string"]  = &fnString;
+    fm["type"]    = mk(&fnType, "a");
+    fm["logical"] = mk(&fnLogical, "a");
+    fm["real"]    = mk(&fnReal, "a");
+    fm["string"]  = mk(&fnString, "a");
 
-    fnNames = fm.keys ~ lm.keys;
+    fnNames = fm.keys;
     fnNames.sort;
-}
-
-void expNumArgs(ErrDg err, char[] name, size_t n, Value[] args)
-{
-    if( args.length != n )
-        err("{}: expected {} argument{}, got {}", name, n,
-                (n==1?"":"s"), args.length);
-}
-
-void expMinArgs(ErrDg err, char[] name, size_t n, Value[] args)
-{
-    if( args.length < n )
-        err("{}: expected {} or more arguments, got {}", name, n, args.length);
 }
 
 void expReal(ErrDg err, char[] name, Value[] args, size_t offset=0)
 {
     foreach( i, arg ; args )
-        if( !arg.isReal )
-            err("{}: expected real for argument {}, got {}",
-                    name, (offset+i+1), arg.tagName);
+        expReal(err, name, arg, offset+i);
+}
+
+void expReal(ErrDg err, char[] name, Value arg, size_t index)
+{
+    if( !arg.isReal )
+        err("{}: expected real for argument {}, got {}",
+                name, index+1, arg.tagName);
 }
 
 void expString(ErrDg err, char[] name, Value[] args, size_t offset=0)
 {
     foreach( i, arg ; args )
-        if( !arg.isString )
-            err("{}: expected string for argument {}, got {}",
-                    name, (offset+i+1), arg.tagName);
+        expString(err, name, arg, offset+i);
 }
 
-Value fnUnaryReal(char[] name, alias fn)(ErrDg err, Value[] args)
+void expString(ErrDg err, char[] name, Value arg, size_t index)
 {
-    expNumArgs(err, name, 1, args);
-    expReal(err, name, args);
-
-    return Value(fn(args[0].asReal));
+    if( !arg.isString )
+        err("{}: expected string for argument {}, got {}",
+                name, index+1, arg.tagName);
 }
 
-Value fnBinaryReal(char[] name, alias fn)(ErrDg err, Value[] args)
+void numArgs(ErrDg err, char[] name, size_t exp, size_t args, bool exact=true)
 {
-    expNumArgs(err, name, 2, args);
-    expReal(err, name, args);
+    if( args < exp )
+        err("{}: expected {}{}, got {}",
+                name, exp, (exact ? "" : " or more"), args);
+}
 
-    return Value(fn(args[0].asReal, args[1].asReal));
+void unpackArgs(ErrDg err, char[] name, Value[] vs,
+        size_t args, ArgDg getArg, bool exact=true)
+{
+    if( args < vs.length )
+        err("{}: expected {}{} arguments, got {}",
+                name, vs.length, (exact ? "" : " or more"), args);
+
+    foreach( i, ref v ; vs )
+        v = getArg(i);
+}
+
+Value fnUnaryReal(char[] name, alias fn)(ErrDg err, size_t args, ArgDg getArg)
+{
+    Value[1] vs;
+    unpackArgs(err, name, vs, args, getArg);
+    expReal(err, name, vs);
+
+    return Value(fn(vs[0].asReal));
+}
+
+Value fnBinaryReal(char[] name, alias fn)(ErrDg err, size_t args, ArgDg getArg)
+{
+    Value[2] vs;
+    unpackArgs(err, name, vs, args, getArg);
+    expReal(err, name, vs);
+
+    return Value(fn(vs[0].asReal, vs[1].asReal));
 }
 
 //
@@ -291,7 +313,7 @@ real poisson(real λ, real min, real max)
 
 // Branching
 
-Value fnIf(ErrDg err, size_t args, Value delegate(size_t) getArg)
+Value fnIf(ErrDg err, size_t args, ArgDg getArg)
 {
     if( args != 3 )
         err("if: expected 3 arguments, got {}", args);
@@ -311,27 +333,35 @@ Value fnIf(ErrDg err, size_t args, Value delegate(size_t) getArg)
 
 alias fnUnaryReal!("abs", abs) fnAbs;
 
-Value fnMin(ErrDg err, Value[] args)
+Value fnMin(ErrDg err, size_t args, ArgDg getArg)
 {
-    expMinArgs(err, "min", 2, args);
-    expReal(err, "min", args);
+    numArgs(err, "min", 2, args, false);
+    auto arg0 = getArg(0);
+    expReal(err, "min", arg0, 0);
 
-    real r = args[0].asReal;
-    foreach( arg ; args[1..$] )
+    real r = arg0.asReal;
+    for( size_t i=1; i<args; ++i )
+    {
+        auto arg = getArg(i);
+        expReal(err, "min", arg, i);
         r = min(r, arg.asReal);
-
+    }
     return Value(r);
 }
 
-Value fnMax(ErrDg err, Value[] args)
+Value fnMax(ErrDg err, size_t args, ArgDg getArg)
 {
-    expMinArgs(err, "max", 2, args);
-    expReal(err, "max", args);
+    numArgs(err, "max", 2, args, false);
+    auto arg0 = getArg(0);
+    expReal(err, "max", arg0, 0);
 
-    real r = args[0].asReal;
-    foreach( arg ; args[1..$] )
+    real r = arg0.asReal;
+    for( size_t i=1; i<args; ++i )
+    {
+        auto arg = getArg(i);
+        expReal(err, "max", arg, i);
         r = max(r, arg.asReal);
-
+    }
     return Value(r);
 }
 
@@ -362,12 +392,13 @@ alias fnUnaryReal!("ceil", ceil) fnCeil;
 alias fnUnaryReal!("round", round_nonCrazy) fnRound;
 alias fnUnaryReal!("trunc", trunc) fnTrunc;
 
-Value fnClamp(ErrDg err, Value[] args)
+Value fnClamp(ErrDg err, size_t args, ArgDg getArg)
 {
-    expNumArgs(err, "clamp", 3, args);
-    expReal(err, "clamp", args);
+    Value[3] vs;
+    unpackArgs(err, "clamp", vs, args, getArg);
+    expReal(err, "clamp", vs);
 
-    return Value(max(args[1].asReal, min(args[0].asReal, args[2].asReal)));
+    return Value(max(vs[1].asReal, min(vs[0].asReal, vs[2].asReal)));
 }
 
 // ErrorFunction
@@ -379,52 +410,69 @@ alias fnUnaryReal!("erfc", erfc) fnErfc;
 
 alias fnBinaryReal!("normal", normal) fnNormal;
 
-Value fnPoisson(ErrDg err, Value[] args)
+Value fnPoisson(ErrDg err, size_t args, ArgDg getArg)
 {
-    if( args.length != 1 && args.length != 3 )
-        err("poisson: expected 1 or 3 args, got {}", args.length);
-
-    expReal(err, "max", args);
+    if( args != 1 && args != 3 )
+        err("poisson: expected 1 or 3 args, got {}", args);
 
     real λ, min, max;
-    λ = args[0].asReal;
-    if( args.length > 1 )
+
+    if( args == 1 )
     {
-        min = args[1].asReal;
-        max = args[2].asReal;
+        Value[1] vs;
+        unpackArgs(err, "poisson", vs, args, getArg);
+        expReal(err, "poisson", vs);
+        λ = vs[0].asReal;
     }
+    else if( args == 3 )
+    {
+        Value[3] vs;
+        unpackArgs(err, "poisson", vs, args, getArg);
+        expReal(err, "poisson", vs);
+        λ = vs[0].asReal;
+        min = vs[1].asReal;
+        max = vs[2].asReal;
+    }
+    else
+        err("poisson: expected 1 or 3 args, got {}", args);
 
     return Value(poisson(λ, min, max));
 }
 
 // String
 
-Value fnConcat(ErrDg err, Value[] args)
+Value fnConcat(ErrDg err, size_t args, ArgDg getArg)
 {
-    expMinArgs(err, "concat", 2, args);
-    expString(err, "concat", args);
+    numArgs(err, "concat", 2, args, false);
 
     char[] s;
 
-    foreach( arg ; args )
+    for( size_t i=0; i<args; ++i )
+    {
+        auto arg = getArg(i);
+        expString(err, "concat", arg, i);
         s ~= arg.asString;
+    }
 
     return Value(s);
 }
 
-Value fnJoin(ErrDg err, Value[] args)
+Value fnJoin(ErrDg err, size_t args, ArgDg getArg)
 {
-    expMinArgs(err, "join", 3, args);
-    expString(err, "join", args);
+    numArgs(err, "join", 3, args, false);
 
-    auto sep = args[0].asString;
-    auto parts = args[1..$];
+    auto sepV = getArg(0); expString(err, "join", sepV, 0);
+    auto sep = sepV.asString;
+    auto part0V = getArg(1); expString(err, "join", sepV, 1);
+    auto part0 = part0V.asString;
 
-    auto s = parts[0].asString;
-    foreach( arg ; parts[1..$] )
+    auto s = part0;
+    for( size_t i=2; i<args; ++i )
     {
+        auto part = getArg(i);
+        expString(err, "join", part, i);
         s ~= sep;
-        s ~= arg.asString;
+        s ~= part.asString;
     }
 
     return Value(s);
@@ -432,14 +480,17 @@ Value fnJoin(ErrDg err, Value[] args)
 
 // Output & Formatting
 
-Value fnPrint(ErrDg err, Value[] args)
+Value fnPrint(ErrDg err, size_t args, ArgDg getArg)
 {
-    expMinArgs(err, "print", 1, args);
+    numArgs(err, "print", 1, args, false);
 
-    foreach( arg ; args )
+    for( size_t i=0; i<args; ++i )
     {
+        auto arg = getArg(i);
         if( arg.isString )
             Stdout(arg.asString);
+        else if( arg.isNil )
+            {} // do nothing
         else
             Stdout(arg.toString);
     }
@@ -448,34 +499,36 @@ Value fnPrint(ErrDg err, Value[] args)
     return Value();
 }
 
-Value fnPrintLn(ErrDg err, Value[] args)
+Value fnPrintLn(ErrDg err, size_t args, ArgDg getArg)
 {
-    fnPrint(err, args);
+    fnPrint(err, args, getArg);
     Stdout.newline;
     return Value();
 }
 
 // Meta
 
-Value fnType(ErrDg err, Value[] args)
+Value fnType(ErrDg err, size_t args, ArgDg getArg)
 {
-    expNumArgs(err, "type", 1, args);
+    Value[1] vs;
+    unpackArgs(err, "type", vs, args, getArg);
 
-    return Value(args[0].tagName);
+    return Value(vs[0].tagName);
 }
 
-Value fnLogical(ErrDg err, Value[] args)
+Value fnLogical(ErrDg err, size_t args, ArgDg getArg)
 {
-    expNumArgs(err, "logical", 1, args);
+    Value[1] vs;
+    unpackArgs(err, "logical", vs, args, getArg);
 
-    auto arg = args[0];
+    auto arg = vs[0];
     switch( arg.tag )
     {
         case Value.Tag.Logical:
             return arg;
 
         case Value.Tag.Real:
-            return Value( !( arg.asReal == 0.0 ) );
+            return Value( arg.asReal != 0.0 );
 
         case Value.Tag.String:
             switch( arg.asString )
@@ -490,11 +543,12 @@ Value fnLogical(ErrDg err, Value[] args)
     }
 }
 
-Value fnReal(ErrDg err, Value[] args)
+Value fnReal(ErrDg err, size_t args, ArgDg getArg)
 {
-    expNumArgs(err, "real", 1, args);
+    Value[1] vs;
+    unpackArgs(err, "real", vs, args, getArg);
 
-    auto arg = args[0];
+    auto arg = vs[0];
     switch( arg.tag )
     {
         case Value.Tag.Logical:
@@ -508,24 +562,23 @@ Value fnReal(ErrDg err, Value[] args)
             uint ate;
             auto v = Float.parse(arg.asString, &ate);
             if( ate == 0 )
-                err("real: invalid value {}", arg.toString);
+                err("real: invalid {}", arg.toString);
             return Value(v);
         }
         default:
-            err("real: invalid value {}", arg.toString);
+            err("logical: invalid value {}", arg.toString);
     }
 }
 
-Value fnString(ErrDg err, Value[] args)
+Value fnString(ErrDg err, size_t args, ArgDg getArg)
 {
-    expNumArgs(err, "string", 1, args);
+    Value[1] vs;
+    unpackArgs(err, "string", vs, args, getArg);
 
-    auto arg = args[0];
+    auto arg = vs[0];
     switch( arg.tag )
     {
         case Value.Tag.Logical:
-            return Value(arg.toString);
-
         case Value.Tag.Real:
             return Value(arg.toString);
 
@@ -533,7 +586,7 @@ Value fnString(ErrDg err, Value[] args)
             return arg;
 
         default:
-            err("string: invalid value {}", arg.toString);
+            err("logical: invalid value {}", arg.toString);
     }
 }
 

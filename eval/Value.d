@@ -11,6 +11,7 @@
 */
 module eval.Value;
 
+import eval.Ast;
 import eval.Util : toStringLiteral;
 
 import tango.util.Convert : to;
@@ -27,6 +28,7 @@ struct Value
         Logical,
         Real,
         String,
+        Function,
     }
 
     union Data
@@ -34,6 +36,7 @@ struct Value
         bool l;
         real r;
         char[] s;
+        FunctionValue f;
     }
 
     Tag tag;
@@ -68,6 +71,14 @@ struct Value
         return r;
     }
 
+    static Value opCall(FunctionValue v)
+    {
+        Value r;
+        r.tag = Tag.Function;
+        r.data.f = v;
+        return r;
+    }
+
     bool isNil()
     {
         return tag == Tag.Nil;
@@ -88,6 +99,11 @@ struct Value
         return tag == Tag.String;
     }
 
+    bool isFunction()
+    {
+        return tag == Tag.Function;
+    }
+
     bool asLogical()
     {
         assert( tag == Tag.Logical );
@@ -106,6 +122,12 @@ struct Value
         return data.s;
     }
 
+    FunctionValue asFunction()
+    {
+        assert( tag == Tag.Function );
+        return data.f;
+    }
+
     char[] tagName()
     {
         switch( tag )
@@ -114,6 +136,7 @@ struct Value
             case Tag.Logical:   return "logical";
             case Tag.Real:      return "real";
             case Tag.String:    return "string";
+            case Tag.Function:  return "function";
             default:            return "unknown("~to!(char[])(tag)~")";
         }
     }
@@ -127,8 +150,31 @@ struct Value
             case Tag.Real:      return Float.truncate(
                                         Float.toString(data.r, FloatDP));
             case Tag.String:    return toStringLiteral(data.s);
+            case Tag.Function:  return asFunction.toString;
             default:            return "<<unknown("~to!(char[])(tag)~")>>";
         }
+    }
+}
+
+class FunctionValue
+{
+    struct Arg
+    {
+        char[] name;
+    }
+
+    alias void delegate(char[], ...) ErrDg;
+    alias Value delegate(size_t) ArgDg;
+    alias Value function(ErrDg, size_t, ArgDg) NativeFn;
+
+    Arg[] args;
+    AstExpr expr;
+    NativeFn nativeFn;
+
+    char[] toString()
+    {
+        // TODO
+        return "function";
     }
 }
 

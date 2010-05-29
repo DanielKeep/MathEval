@@ -60,9 +60,9 @@ void startRepl()
     char[] name = "stdin";
 
     scope bivars = new BuiltinVariables;
-    scope bifunc = new BuiltinFunctions;
-    scope vars = new VariableStore(bivars);
-    scope eval = new AstEvalVisitor(&error, vars, bifunc);
+    scope bifunc = new BuiltinFunctions(bivars);
+    scope vars = new VariableStore(bifunc);
+    scope eval = new AstEvalVisitor(&error, vars);
 
     Stdout
         ("Hi, I'm the math eval REPL.").newline()
@@ -88,8 +88,19 @@ replLoop:
                 continue replLoop;
 
             case ".f": case ".funcs":
-                foreach( k ; &bifunc.iterate )
-                    Stdout.formatln(" - {}", k);
+                foreach( n,v ; &vars.iterate )
+                {
+                    if( !v.isFunction ) continue;
+                    auto fv = v.asFunction;
+                    Stdout(" - ")(n)("(");
+                    if( fv.args.length > 0 )
+                    {
+                        Stdout(fv.args[0].name);
+                        foreach( arg ; fv.args[1..$] )
+                            Stdout(",")(arg.name);
+                    }
+                    Stdout(")").newline;
+                }
                 Stdout.newline();
                 continue replLoop;
 
@@ -101,11 +112,10 @@ replLoop:
                 break replLoop;
 
             case ".v": case ".vars":
-                foreach( k ; &vars.iterate )
+                foreach( n,v ; &vars.iterate )
                 {
-                    Value v;
-                    vars.resolve(k, v);
-                    Stdout.formatln("let {} = {}", k, v.toString);
+                    if( v.isFunction ) continue;
+                    Stdout.formatln("let {} = {}", n, v.toString);
                 }
                 Stdout.newline();
                 continue replLoop;
@@ -134,12 +144,14 @@ replLoop:
                         scope so = new StructuredOutput(Cout.output);
                         scope dump = new AstDumpVisitor(so);
                         dump.visitBase(stmt);
+                        Stdout.newline;
                         continue replLoop;
                     }
                     case ".lex":
                     {
                         foreach( token ; lexIter(name, tail) )
                             Stdout("  ")(token).newline;
+                        Stdout.newline;
                         continue replLoop;
                     }
                     default:

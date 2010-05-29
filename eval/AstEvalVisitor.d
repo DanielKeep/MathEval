@@ -9,7 +9,6 @@
 module eval.AstEvalVisitor;
 
 import eval.Ast;
-import eval.Functions;
 import eval.Location;
 import eval.Statistical : uniformReal;
 import eval.Value;
@@ -22,13 +21,11 @@ class AstEvalVisitor
 {
     LocErr err;
     Variables vars;
-    Functions funcs;
 
-    this(LocErr err, Variables vars, Functions funcs)
+    this(LocErr err, Variables vars)
     {
         this.err = err;
         this.vars = vars;
-        this.funcs = funcs;
     }
 
     Value visitBase(AstNode node)
@@ -168,10 +165,24 @@ class AstEvalVisitor
             return visitBase(node.args[i]);
         }
 
-        // For now, functions aren't variables.
-        Value r;
-        if( ! funcs.invoke(node.ident, &fnErr, node.args.length, &getArg, r) )
+        Value fnVar;
+        if( ! vars.resolve(node.ident, fnVar) )
             err(node.loc, "unknown function '{}'", node.ident);
+
+        if( ! fnVar.isFunction )
+            err(node.loc, "expected function, got {}", fnVar.tagName);
+
+        auto fv = fnVar.asFunction;
+        Value r;
+
+        if( fv.nativeFn !is null )
+            r = fv.nativeFn(&fnErr, node.args.length, &getArg);
+        else
+        {
+            assert( fv.expr !is null );
+            assert(false, "nyi");
+        }
+
         return r;
     }
 
