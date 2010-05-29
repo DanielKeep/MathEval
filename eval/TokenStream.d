@@ -74,14 +74,19 @@ final class TokenStream
     {
         if( skipEol )
         {
-            size_t i = 0;
+            size_t i = 0, j = 0;
             Token t;
             unskipEolDo
             ({
                 do
                 {
                     t = peek(i++);
-                    if( t.type != TOKeol )
+                    if( t.type == TOKeos )
+                        return;
+                    else if( t.type != TOKeol )
+                        ++ j;
+
+                    if( j == n+1 )
                         return;
                 }
                 while(true);
