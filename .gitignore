@@ -4,6 +4,7 @@
 
 *.exe
 *.map
+*.html
 
 *~
 *.swp
