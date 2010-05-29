@@ -92,6 +92,51 @@ Finally, it is worth noting that, depending on your platform, numbers will
 internally represented with (roughly) at least 16 decimal digits of precision;
 possibly as many as 20 decimal digits.
 
+String Expressions
+``````````````````
+
+Strings are represented literally between double quotes.  For example::
+
+    "Strings are represented literally between double quotes."
+
+To include a double quote inside a string, you must "escape" it like so::
+
+    "If you wish to include a double quote inside a string, you must \"escape\" it like so:"
+
+There are a number of other special escapes you can use inside string
+literals.  A non-self-referential list is:
+
+======= =======================================================
+Escape  Meaning
+======= =======================================================
+``\a``  Plays an audible bell when displayed literally.
+``\b``  A backspace; deletes the previous character.
+``\f``  Form feed.
+``\n``  New line.
+``\r``  Carriage return.
+``\t``  Tab.
+``\v``  Vertical tab.
+``\'``  Single quote.
+``\"``  Double quote.
+``\?``  Escape escape sequence.
+``\\``  Backslash.
+======= =======================================================
+
+Most of these have no practical use whatsoever.
+
+Additionally, you can insert an arbitrary character provided you know its
+numerical value in hexadecimal.
+
+=============== ===============================================
+Escape          Meaning
+=============== ===============================================
+``\xNN``        Character between 00 and FF.
+``\uNNNN``      Character between 0000 and FFFF.
+``\UNNNNNNNN``  Character between 00000000 and 0010FFFF.
+=============== ===============================================
+
+Again, you will quite likely never, ever need these.
+
 Sub-Expressions
 ```````````````
 
