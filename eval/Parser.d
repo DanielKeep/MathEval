@@ -350,12 +350,15 @@ AstFunctionExpr tryparseFunctionExpr(TokenStream ts)
     AstExpr[] args;
 
     if( ts.peek.type != TOKrparen )
-        while( true )
-        {
-            args ~= parseExpr(ts);
-            if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
-                break;
-        }
+        ts.skipEolDo
+        ({
+            while( true )
+            {
+                args ~= parseExpr(ts);
+                if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
+                    break;
+            }
+        });
     else
         ts.popExpect(TOKrparen);
 
