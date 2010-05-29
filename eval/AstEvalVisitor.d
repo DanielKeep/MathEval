@@ -236,6 +236,20 @@ Value binCmp(OpErr err, Value lhs, Value rhs, Cmp cmp)
 
         return Value((act & cmp) != Cmp.Nothing);
     }
+    else if( lhs.isString && rhs.isString )
+    {
+        auto l = lhs.asString;
+        auto r = rhs.asString;
+
+        // TODO: more efficient comparison
+        Cmp act;
+        act |= (l != r) ? Cmp.Ne : Cmp.Nothing;
+        act |= (l < r)  ? Cmp.Lt : Cmp.Nothing;
+        act |= (l == r) ? Cmp.Eq : Cmp.Nothing;
+        act |= (l > r)  ? Cmp.Gt : Cmp.Nothing;
+
+        return Value((act & cmp) != Cmp.Nothing);
+    }
     else
         err("invalid types for comparison: {} and {}",
                 lhs.tagName, rhs.tagName);
