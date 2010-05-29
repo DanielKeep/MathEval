@@ -180,7 +180,23 @@ class AstEvalVisitor
         else
         {
             assert( fv.expr !is null );
-            assert(false, "nyi");
+
+            if( node.args.length != fv.args.length )
+                err(node.loc, "{}: expected {} argument{}, got {}",
+                        node.ident, fv.args.length,
+                        (fv.args.length == 1) ? "" : "s",
+                        node.args.length);
+
+            scope locals = new LocalVariables(this, vars);
+
+            foreach( i, arg ; fv.args )
+                locals.vars[arg.name] = node.args[i];
+
+            auto oldVars = vars;
+            vars = locals;
+            scope(exit) vars = oldVars;
+
+            r = visitBase(fv.expr);
         }
 
         return r;
@@ -217,6 +233,122 @@ class AstEvalVisitor
 }
 
 private:
+
+class LocalVariables : Variables
+{
+    Variables next;
+    AstEvalVisitor eval;
+    AstExpr[char[]] vars;
+    Value[char[]] vals;
+
+    this(AstEvalVisitor eval, Variables next = null)
+    {
+        this.eval = eval;
+        this.next = next;
+    }
+
+    bool resolve(char[] ident, out Value value)
+    {
+        auto ptr = ident in vars;
+        if( ptr !is null )
+        {
+            if( auto vptr = ident in vals )
+                value = *vptr;
+            else
+            {
+                value = eval.visitBase(*ptr);
+                vals[ident] = value;
+            }
+            return true;
+        }
+        else
+            return nextResolve(ident, value);
+    }
+
+    bool define(char[] ident, ref Value value)
+    {
+        if( ident in vars )
+            return false;
+
+        return nextDefine(ident, value);
+    }
+
+    int iterate(int delegate(ref char[], ref Value) dg)
+    {
+        char[][] names = vars.keys;
+        names.sort;
+
+        int r = 0;
+        foreach( nextName, nextValue ; &nextIterate )
+        {
+            char[] name;
+            Value value;
+
+            while( names.length > 0 && names[0] < nextName )
+            {
+                name = names[0];
+                if( auto vptr = name in vals )
+                    value = *vptr;
+                else
+                {
+                    value = eval.visitBase(vars[name]);
+                    vals[name] = value;
+                }
+                names = names[1..$];
+                r = dg(name, value);
+                if( r != 0 )
+                    return r;
+            }
+
+            name = nextName;
+            value = nextValue;
+
+            r = dg(name, value);
+            if( r != 0 )
+                return r;
+        }
+
+        foreach( name ; names )
+        {
+            auto tmpN = name;
+            Value tmpV;
+            if( auto vptr = name in vals )
+                tmpV = *vptr;
+            else
+            {
+                tmpV = eval.visitBase(vars[name]);
+                vals[name] = tmpV;
+            }
+            r = dg(tmpN, tmpV);
+            if( r != 0 )
+                return r;
+        }
+
+        return r;
+    }
+
+    bool nextResolve(char[] ident, out Value value)
+    {
+        if( next !is null )
+            return next.resolve(ident, value);
+        return false;
+    }
+
+    bool nextDefine(char[] ident, ref Value value)
+    {
+        if( next !is null )
+            return next.define(ident, value);
+        return false;
+    }
+
+    int nextIterate(int delegate(ref char[], ref Value) dg)
+    {
+        if( next !is null )
+            return next.iterate(dg);
+
+        return 0;
+    }
+}
 
 enum Cmp
 {
