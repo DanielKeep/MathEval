@@ -16,7 +16,7 @@ struct Location
 
     char[] toString()
     {
-        return Format("{}({}:{})", file, line, column);
+        return Format("{}({})", file, line, column);
     }
 }
 
