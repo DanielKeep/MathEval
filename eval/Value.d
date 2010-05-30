@@ -29,7 +29,15 @@ struct Value
         Real,
         String,
         Function,
+        List,
     }
+
+    version( MathEval_Lists )
+        struct ListNode
+        {
+            Value* v;
+            ListNode* n;
+        }
 
     union Data
     {
@@ -37,6 +45,9 @@ struct Value
         real r;
         char[] s;
         FunctionValue f;
+
+        version( MathEval_Lists )
+            ListNode* li;
     }
 
     Tag tag;
@@ -79,6 +90,15 @@ struct Value
         return r;
     }
 
+    version( MathEval_Lists )
+        static Value opCall(ListNode* v)
+        {
+            Value r;
+            r.tag = Tag.List;
+            r.data.li = v;
+            return r;
+        }
+
     bool isNil()
     {
         return tag == Tag.Nil;
@@ -104,6 +124,12 @@ struct Value
         return tag == Tag.Function;
     }
 
+    version( MathEval_Lists )
+        bool isList()
+        {
+            return tag == Tag.List;
+        }
+
     bool asLogical()
     {
         assert( tag == Tag.Logical );
@@ -128,6 +154,13 @@ struct Value
         return data.f;
     }
 
+    version( MathEval_Lists )
+        ListNode* asList()
+        {
+            assert( tag == Tag.List );
+            return data.li;
+        }
+
     char[] tagName()
     {
         switch( tag )
@@ -137,6 +170,7 @@ struct Value
             case Tag.Real:      return "real";
             case Tag.String:    return "string";
             case Tag.Function:  return "function";
+            case Tag.List:      return "list";
             default:            return "unknown("~to!(char[])(tag)~")";
         }
     }
@@ -151,6 +185,23 @@ struct Value
                                         Float.toString(data.r, FloatDP));
             case Tag.String:    return toStringLiteral(data.s);
             case Tag.Function:  return asFunction.toString;
+
+        version( MathEval_Lists )
+        {
+            case Tag.List:
+            {
+                char[] s;
+                auto n = asList;
+                while( n !is null )
+                {
+                    if( s != "" )
+                        s ~= ", ";
+                    s ~= (n.v !is null) ? n.v.toString : "nil";
+                    n = n.n;
+                }
+                return "["~s~"]";
+            }
+        }
             default:            return "<<unknown("~to!(char[])(tag)~")>>";
         }
     }

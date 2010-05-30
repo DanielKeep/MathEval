@@ -59,6 +59,9 @@ class AstEvalVisitor
             return visit(stn);
         if( auto stn = cast(AstStringExpr) node )
             return visit(stn);
+        version( MathEval_Lists )
+            if( auto stn = cast(AstListExpr) node )
+                return visit(stn);
         if( auto stn = cast(AstLambdaExpr) node )
             return visit(stn);
         if( auto stn = cast(AstBinaryExpr) node )
@@ -129,6 +132,34 @@ class AstEvalVisitor
     {
         return Value(node.value);
     }
+
+    version( MathEval_Lists )
+        Value visit(AstListExpr node)
+        {
+            Value.ListNode* head, tail;
+            if( node.elements.length > 0 )
+            {
+                foreach( el ; node.elements )
+                {
+                    if( head is null )
+                    {
+                        head = tail = new Value.ListNode;
+                    }
+                    else
+                    {
+                        tail.n = new Value.ListNode;
+                        tail = tail.n;
+                    }
+
+                    auto v = new Value;
+                    *v = visitBase(el);
+                    tail.v = v;
+                }
+                return Value(head);
+            }
+            else
+                return Value(cast(Value.ListNode*) null);
+        }
 
     Value visit(AstLambdaExpr node)
     {

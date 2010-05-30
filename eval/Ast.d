@@ -283,3 +283,15 @@ class AstSharedExpr : AstExpr
     }
 }
 
+version( MathEval_Lists )
+    class AstListExpr : AstExpr
+    {
+        AstExpr[] elements;
+
+        this(Location loc, AstExpr[] elements)
+        {
+            super(loc);
+            this.elements = elements;
+        }
+    }
+

@@ -318,6 +318,8 @@ AstExpr tryparseExprAtom(TokenStream ts)
     if( auto e = tryparseFunctionExpr(ts) ) return e;
     if( auto e = tryparseNumberExpr(ts) )   return e;
     if( auto e = tryparseStringExpr(ts) )   return e;
+    version( MathEval_Lists )
+        if( auto e = tryparseListExpr(ts) )     return e;
     if( auto e = tryparseLambdaExpr(ts) )   return e;
     if( auto e = tryparseUnaryExpr(ts) )    return e;
     if( auto e = tryparseUniformExpr(ts) )  return e;
@@ -356,6 +358,27 @@ AstExpr tryparseStringExpr(TokenStream ts)
     char[] value = parseString(ts.popExpect(TOKstring).text);
     return new AstStringExpr(loc, value);
 }
+
+version( MathEval_Lists )
+    AstExpr tryparseListExpr(TokenStream ts)
+    {
+        if( ts.peek.type != TOKlbracket ) return null;
+
+        auto loc = ts.popExpect(TOKlbracket).loc;
+        AstExpr[] elements;
+
+        if( ts.peek.type != TOKrbracket )
+            while( true )
+            {
+                elements ~= parseExpr(ts);
+                if( ts.popExpectAny(TOKcomma, TOKrbracket).type == TOKrbracket )
+                    break;
+            }
+        else
+            ts.popExpect(TOKrbracket);
+
+        return new AstListExpr(loc, elements);
+    }
 
 AstLambdaExpr tryparseLambdaExpr(TokenStream ts)
 {

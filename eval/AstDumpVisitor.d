@@ -35,6 +35,9 @@ class AstDumpVisitor
             return visit(stn);
         if( auto stn = cast(AstStringExpr) node )
             return visit(stn);
+        version( MathEval_Lists )
+            if( auto stn = cast(AstListExpr) node )
+                return visit(stn);
         if( auto stn = cast(AstLambdaExpr) node )
             return visit(stn);
         if( auto stn = cast(AstBinaryExpr) node )
@@ -136,15 +139,40 @@ class AstDumpVisitor
         so.f("{}", toStringLiteral(node.value));
     }
 
+    version( MathEval_Lists )
+        void visit(AstListExpr node)
+        {
+            so
+                .pl("(list")
+                .push
+                .seq
+                ({
+                    if( node.elements.length > 0 )
+                    {
+                        foreach( el ; node.elements )
+                        {
+                            visitBase(el);
+                            so.l;
+                        }
+                    }
+                })
+                .pl(")")
+                .pop
+            ;
+        }
+
     void visit(AstLambdaExpr node)
     {
         so
             .p("(lambda (")
             .seq
             ({
-                so.p(node.args[0]);
-                foreach( arg ; node.args )
-                    so.p(" ").p(arg);
+                if( node.args.length > 0 )
+                {
+                    so.p(node.args[0]);
+                    foreach( arg ; node.args )
+                        so.p(" ").p(arg);
+                }
             })
             .p(")")
             .push
