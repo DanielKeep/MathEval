@@ -411,6 +411,7 @@ Functions are defined using the following placeholder variables:
 * ``x``, ``y``, ``z`` - arbitrary real numbers.
 * ``l`` - a logical value.
 * ``s`` - a string.
+* ``li`` - a list.
 * ``...`` - indicates that the function takes "more of the same": an arbitrary
   number of additional parameters.
 
@@ -507,6 +508,21 @@ Name                    Description
 ``concat(s1,s2,...)``   Concatenates two or more strings together.
 ``join(s,s1,s2,...)``   Concatenates two or more strings together, placing *s*
                         between each argument.
+======================= =======================================================
+
+List
+----
+
+**Note**: List support may not be available.
+
+======================= =======================================================
+Name                    Description
+======================= =======================================================
+``cons(a,li)``          Constructs a new list with *a* in front of the
+                        elements of *li*.
+``head(li)``            Returns the first element of the list *li*.
+``tail(li)``            Returns everything after the first element of the list
+                        *li*.
 ======================= =======================================================
 
 Output
@@ -735,6 +751,7 @@ The grammar is otherwise complete.
 
     <expression atom> = <number expression>
                       | <string expression>
+                      | <list expression>
                       | <lambda expression>
                       | <unary expression>
                       | <function expression>
@@ -749,6 +766,8 @@ The grammar is otherwise complete.
                         ;
 
     <string expression> = <string>;
+
+    <list expression> = "[", [ <expression>, { ",", <expression> } ], "]";
 
     <lambda expression> = "\", [ <identifier>, { ",", <identifier> } ], ":",
                           <expression>;
