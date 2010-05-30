@@ -396,27 +396,29 @@ AstExpr tryparseFunctionExpr(TokenStream ts)
     else
         return null;
 
-    if( ts.peek.type != TOKlparen ) return baseExpr;
+    while( ts.peek.type == TOKlparen )
+    {
+        auto loc = baseExpr.loc;
+        ts.popExpect(TOKlparen);
 
-    auto loc = baseExpr.loc;
-    ts.popExpect(TOKlparen);
+        AstExpr[] args;
 
-    AstExpr[] args;
+        if( ts.peek.type != TOKrparen )
+            ts.skipEolDo
+            ({
+                while( true )
+                {
+                    args ~= parseExpr(ts);
+                    if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
+                        break;
+                }
+            });
+        else
+            ts.popExpect(TOKrparen);
 
-    if( ts.peek.type != TOKrparen )
-        ts.skipEolDo
-        ({
-            while( true )
-            {
-                args ~= parseExpr(ts);
-                if( ts.popExpectAny(TOKrparen, TOKcomma).type == TOKrparen )
-                    break;
-            }
-        });
-    else
-        ts.popExpect(TOKrparen);
-
-    return new AstCallExpr(loc, baseExpr, args);
+        baseExpr = new AstCallExpr(loc, baseExpr, args);
+    }
+    return baseExpr;
 }
 
 AstExpr tryparseUnaryExpr(TokenStream ts)
