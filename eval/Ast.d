@@ -11,7 +11,8 @@ import eval.Location;
 const char[][] AstNodeNames =
 [
     "AstScript",
-    "AstLetStmt",
+    "AstLetVarStmt",
+    "AstLetFuncStmt",
     "AstExprStmt",
     "AstNumberExpr",
     "AstStringExpr",
@@ -65,6 +66,25 @@ class AstLetStmt : AstStmt
         super(loc);
         this.ident = ident;
         this.expr = expr;
+    }
+}
+
+class AstLetVarStmt : AstLetStmt
+{
+    this(Location loc, char[] ident, AstExpr expr)
+    {
+        super(loc, ident, expr);
+    }
+}
+
+class AstLetFuncStmt : AstLetStmt
+{
+    char[][] args;
+
+    this(Location loc, char[] ident, char[][] args, AstExpr expr)
+    {
+        super(loc, ident, expr);
+        this.args = args;
     }
 }
 

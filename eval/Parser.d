@@ -60,11 +60,36 @@ AstLetStmt tryparseLetStmt(TokenStream ts)
 
     auto loc = ts.pop.loc;
     auto ident = ts.popExpect(TOKident).text;
-    ts.popExpect(TOKeq);
-    auto expr = parseExpr(ts);
-    ts.popExpectAny(TOKeol, TOKeos);
+    if( ts.peek.type == TOKlparen )
+    {
+        char[][] args;
+        ts.popExpect(TOKlparen);
+        if( ts.peek.type != TOKrparen )
+            ts.skipEolDo
+            ({
+                while( ts.peek.type != TOKrparen )
+                {
+                    args ~= ts.popExpect(TOKident).text;
+                    if( ts.popExpectAny(TOKcomma, TOKrparen)
+                            .type == TOKrparen )
+                        break;
+                }
+            });
 
-    return new AstLetStmt(loc, ident, expr);
+        ts.popExpect(TOKeq);
+        auto expr = parseExpr(ts);
+        ts.popExpectAny(TOKeol, TOKeos);
+
+        return new AstLetFuncStmt(loc, ident, args, expr);
+    }
+    else
+    {
+        ts.popExpect(TOKeq);
+        auto expr = parseExpr(ts);
+        ts.popExpectAny(TOKeol, TOKeos);
+
+        return new AstLetVarStmt(loc, ident, expr);
+    }
 }
 
 AstExprStmt parseExprStmt(TokenStream ts)

@@ -25,7 +25,9 @@ class AstDumpVisitor
     {
         if( auto stn = cast(AstScript) node )
             return visit(stn);
-        if( auto stn = cast(AstLetStmt) node )
+        if( auto stn = cast(AstLetVarStmt) node )
+            return visit(stn);
+        if( auto stn = cast(AstLetFuncStmt) node )
             return visit(stn);
         if( auto stn = cast(AstExprStmt) node )
             return visit(stn);
@@ -68,10 +70,37 @@ class AstDumpVisitor
         ;
     }
 
-    void visit(AstLetStmt node)
+    void visit(AstLetVarStmt node)
     {
         so
-            .fl("(let {}", node.ident)
+            .fl("(let-var {}", node.ident)
+            .push
+            .seq(
+            {
+                visitBase(node.expr);
+            })
+            .pl(")")
+            .pop
+        ;
+    }
+
+    void visit(AstLetFuncStmt node)
+    {
+        so
+            .f("(let-func {} (", node.ident)
+            .seq
+            ({
+                if( node.args.length > 0 )
+                {
+                    auto sep = ""[];
+                    foreach( arg ; node.args )
+                    {
+                        so.f("{}{}", sep, arg);
+                        sep = " ";
+                    }
+                }
+            })
+            .pl(")")
             .push
             .seq(
             {

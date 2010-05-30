@@ -164,7 +164,7 @@ replLoop:
         contLoop = false;
         try
         {
-            scope src = new Source(name, line);
+            scope src = new Source(name, line.dup);
             scope ts = new TokenStream(src, &lexNext, &error);
             script = parseScript(ts);
         }

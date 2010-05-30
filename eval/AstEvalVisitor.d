@@ -32,7 +32,9 @@ class AstEvalVisitor
     {
         if( auto stn = cast(AstScript) node )
             return visit(stn);
-        if( auto stn = cast(AstLetStmt) node )
+        if( auto stn = cast(AstLetVarStmt) node )
+            return visit(stn);
+        if( auto stn = cast(AstLetFuncStmt) node )
             return visit(stn);
         if( auto stn = cast(AstExprStmt) node )
             return visit(stn);
@@ -69,9 +71,23 @@ class AstEvalVisitor
         return r;
     }
 
-    Value visit(AstLetStmt node)
+    Value visit(AstLetVarStmt node)
     {
         if( ! vars.define(node.ident, visitBase(node.expr)) )
+            err(node.loc, "cannot redefine '{}'", node.ident);
+
+        return Value();
+    }
+
+    Value visit(AstLetFuncStmt node)
+    {
+        auto fv = new FunctionValue;
+        fv.args.length = node.args.length;
+        foreach( i, name ; node.args )
+            fv.args[i].name = name;
+        fv.expr = node.expr;
+
+        if( ! vars.define(node.ident, Value(fv)) )
             err(node.loc, "cannot redefine '{}'", node.ident);
 
         return Value();

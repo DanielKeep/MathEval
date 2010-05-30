@@ -57,6 +57,8 @@ bool lexSymbol(Source src, LexErr err, out Token token)
         case ',': l = 1; tok = TOKcomma; break;
         case '+': l = 1; tok = TOKplus; break;
         case '-': l = 1; tok = TOKhyphen; break;
+        case '\\':l = 1; tok = TOKbslash; break;
+        case ':': l = 1; tok = TOKcolon; break;
 
         // multi-cp symbols
         case '!':

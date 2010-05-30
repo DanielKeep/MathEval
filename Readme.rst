@@ -711,7 +711,11 @@ The grammar is otherwise complete.
            | <eos>
            ;
 
-    <let statement> = "let", <identifier>, "=", <expression>, <term>;
+    <let statement> = "let", <identifier>, "=", <expression>, <term>
+                    | "let", <identifier>, "(",
+                          [ <identifier>, { ",", <identifier> } ],
+                      ")", "=", <expression>, <term>
+                    ;
 
     <expression statement> = <expression>, <term>;
 
