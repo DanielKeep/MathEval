@@ -313,6 +313,7 @@ AstExpr tryparseExprAtom(TokenStream ts)
 {
     if( auto e = tryparseNumberExpr(ts) )   return e;
     if( auto e = tryparseStringExpr(ts) )   return e;
+    if( auto e = tryparseLambdaExpr(ts) )   return e;
     if( auto e = tryparseUnaryExpr(ts) )    return e;
     if( auto e = tryparseFunctionExpr(ts) ) return e;
     if( auto e = tryparseVariableExpr(ts) ) return e;
@@ -352,6 +353,24 @@ AstExpr tryparseStringExpr(TokenStream ts)
     auto loc = ts.peek.loc;
     char[] value = parseString(ts.popExpect(TOKstring).text);
     return new AstStringExpr(loc, value);
+}
+
+AstLambdaExpr tryparseLambdaExpr(TokenStream ts)
+{
+    if( ts.peek.type != TOKbslash ) return null;
+
+    auto loc = ts.popExpect(TOKbslash).loc;
+    char[][] args;
+    args ~= ts.popExpect(TOKident).text;
+    while( ts.peek.type == TOKcomma )
+    {
+        ts.popExpect(TOKcomma);
+        args ~= ts.popExpect(TOKident).text;
+    }
+    ts.popExpect(TOKcolon);
+
+    auto expr = parseExpr(ts);
+    return new AstLambdaExpr(loc, args, expr);
 }
 
 AstVariableExpr tryparseVariableExpr(TokenStream ts)

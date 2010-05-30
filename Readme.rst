@@ -589,7 +589,9 @@ Symbol
            ├─'<='─┘
            ├─'<'──┘
            ├─'>='─┘
-           └─'>'──┘
+           ├─'>'──┘
+           ├─'\'──┘
+           └─':'──┘
 
 Literal
 ```````
@@ -723,6 +725,7 @@ The grammar is otherwise complete.
 
     <expression atom> = <number expression>
                       | <string expression>
+                      | <lambda expression>
                       | <unary expression>
                       | <function expression>
                       | <variable expression>
@@ -736,6 +739,9 @@ The grammar is otherwise complete.
                         ;
 
     <string expression> = <string>;
+
+    <lambda expression> = "\", <identifier>, { ",", <identifier> }, ":",
+                          <expression>;
 
     <unary expression> = <unary op>, <expression atom>;
 

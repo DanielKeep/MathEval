@@ -16,6 +16,7 @@ const char[][] AstNodeNames =
     "AstExprStmt",
     "AstNumberExpr",
     "AstStringExpr",
+    "AstLambdaExpr",
     "AstBinaryExpr",
     "AstUnaryExpr",
     "AstVariableExpr",
@@ -128,6 +129,22 @@ class AstStringExpr : AstExpr
     {
         super(loc);
         this.value = value;
+    }
+}
+
+class AstLambdaExpr : AstExpr
+{
+    char[][] args;
+    AstExpr expr;
+
+    this(Location loc, char[][] args, AstExpr expr)
+    {
+        assert( args.length >= 1 );
+        assert( expr !is null );
+        super(loc);
+
+        this.args = args;
+        this.expr = expr;
     }
 }
 

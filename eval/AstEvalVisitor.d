@@ -42,6 +42,8 @@ class AstEvalVisitor
             return visit(stn);
         if( auto stn = cast(AstStringExpr) node )
             return visit(stn);
+        if( auto stn = cast(AstLambdaExpr) node )
+            return visit(stn);
         if( auto stn = cast(AstBinaryExpr) node )
             return visit(stn);
         if( auto stn = cast(AstUnaryExpr) node )
@@ -107,6 +109,16 @@ class AstEvalVisitor
     Value visit(AstStringExpr node)
     {
         return Value(node.value);
+    }
+
+    Value visit(AstLambdaExpr node)
+    {
+        auto fv = new FunctionValue;
+        fv.args.length = node.args.length;
+        foreach( i, name ; node.args )
+            fv.args[i].name = name;
+        fv.expr = node.expr;
+        return Value(fv);
     }
 
     Value visit(AstBinaryExpr node)

@@ -35,6 +35,8 @@ class AstDumpVisitor
             return visit(stn);
         if( auto stn = cast(AstStringExpr) node )
             return visit(stn);
+        if( auto stn = cast(AstLambdaExpr) node )
+            return visit(stn);
         if( auto stn = cast(AstBinaryExpr) node )
             return visit(stn);
         if( auto stn = cast(AstUnaryExpr) node )
@@ -132,6 +134,23 @@ class AstDumpVisitor
     void visit(AstStringExpr node)
     {
         so.f("{}", toStringLiteral(node.value));
+    }
+
+    void visit(AstLambdaExpr node)
+    {
+        so
+            .p("(lambda (")
+            .seq
+            ({
+                so.p(node.args[0]);
+                foreach( arg ; node.args )
+                    so.p(" ").p(arg);
+            })
+            .p(")")
+            .push
+            .seq({ visitBase(node.expr); })
+            .pop
+        ;
     }
 
     void visit(AstBinaryExpr node)
