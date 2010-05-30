@@ -75,6 +75,8 @@ AstLetStmt tryparseLetStmt(TokenStream ts)
                         break;
                 }
             });
+        else
+            ts.popExpect(TOKrparen);
 
         ts.popExpect(TOKeq);
         auto expr = parseExpr(ts);
