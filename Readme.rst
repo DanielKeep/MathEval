@@ -740,14 +740,14 @@ The grammar is otherwise complete.
 
     <string expression> = <string>;
 
-    <lambda expression> = "\", <identifier>, { ",", <identifier> }, ":",
+    <lambda expression> = "\", [ <identifier>, { ",", <identifier> } ], ":",
                           <expression>;
 
     <unary expression> = <unary op>, <expression atom>;
 
     <function expression> = ( <identifier> | <sub expression> ), "(", ")"
                           | ( <identifier> | <sub expression> ), "(",
-                                <expression>, { ",", <expression> }
+                                [ <expression>, { ",", <expression> } ]
                             ")"
                           ;
 
