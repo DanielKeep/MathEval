@@ -20,7 +20,7 @@ const char[][] AstNodeNames =
     "AstBinaryExpr",
     "AstUnaryExpr",
     "AstVariableExpr",
-    "AstFunctionExpr",
+    "AstCallExpr",
     "AstUniformExpr",
     "AstSharedExpr",
 ];
@@ -257,18 +257,17 @@ class AstVariableExpr : AstExpr
     }
 }
 
-class AstFunctionExpr : AstExpr
+class AstCallExpr : AstExpr
 {
-    char[] ident;
+    AstExpr fnExpr;
     AstExpr[] args;
 
-    this(Location loc, char[] ident, AstExpr[] args)
+    this(Location loc, AstExpr fnExpr, AstExpr[] args)
     {
-        assert( ident != "" );
-        foreach( arg ; args ) assert( arg !is null );
-
+        assert( fnExpr !is null );
+        
         super(loc);
-        this.ident = ident;
+        this.fnExpr = fnExpr;
         this.args = args;
     }
 }

@@ -311,14 +311,12 @@ AstExpr parseExpr(TokenStream ts)
 
 AstExpr tryparseExprAtom(TokenStream ts)
 {
+    if( auto e = tryparseFunctionExpr(ts) ) return e;
     if( auto e = tryparseNumberExpr(ts) )   return e;
     if( auto e = tryparseStringExpr(ts) )   return e;
     if( auto e = tryparseLambdaExpr(ts) )   return e;
     if( auto e = tryparseUnaryExpr(ts) )    return e;
-    if( auto e = tryparseFunctionExpr(ts) ) return e;
-    if( auto e = tryparseVariableExpr(ts) ) return e;
     if( auto e = tryparseUniformExpr(ts) )  return e;
-    if( auto e = tryparseSubExpr(ts) )      return e;
     return null;
 }
 
@@ -382,13 +380,20 @@ AstVariableExpr tryparseVariableExpr(TokenStream ts)
     return new AstVariableExpr(loc, ident);
 }
 
-AstFunctionExpr tryparseFunctionExpr(TokenStream ts)
+AstExpr tryparseFunctionExpr(TokenStream ts)
 {
-    if( ts.peek(0).type != TOKident ) return null;
-    if( ts.peek(1).type != TOKlparen ) return null;
+    AstExpr baseExpr;
 
-    auto loc = ts.peek.loc;
-    auto ident = ts.popExpect(TOKident).text;
+    if( auto varExpr = tryparseVariableExpr(ts) )
+        baseExpr = varExpr;
+    else if( auto subExpr = tryparseSubExpr(ts) )
+        baseExpr = subExpr;
+    else
+        return null;
+
+    if( ts.peek.type != TOKlparen ) return baseExpr;
+
+    auto loc = baseExpr.loc;
     ts.popExpect(TOKlparen);
 
     AstExpr[] args;
@@ -406,7 +411,7 @@ AstFunctionExpr tryparseFunctionExpr(TokenStream ts)
     else
         ts.popExpect(TOKrparen);
 
-    return new AstFunctionExpr(loc, ident, args);
+    return new AstCallExpr(loc, baseExpr, args);
 }
 
 AstExpr tryparseUnaryExpr(TokenStream ts)

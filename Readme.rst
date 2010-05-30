@@ -745,8 +745,8 @@ The grammar is otherwise complete.
 
     <unary expression> = <unary op>, <expression atom>;
 
-    <function expression> = <identifier>, "(", ")"
-                          | <identifier>, "(",
+    <function expression> = ( <identifier> | <sub expression> ), "(", ")"
+                          | ( <identifier> | <sub expression> ), "(",
                                 <expression>, { ",", <expression> }
                             ")"
                           ;

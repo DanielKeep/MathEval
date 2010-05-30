@@ -50,7 +50,7 @@ class AstEvalVisitor
             return visit(stn);
         if( auto stn = cast(AstVariableExpr) node )
             return visit(stn);
-        if( auto stn = cast(AstFunctionExpr) node )
+        if( auto stn = cast(AstCallExpr) node )
             return visit(stn);
         if( auto stn = cast(AstUniformExpr) node )
             return visit(stn);
@@ -181,7 +181,7 @@ class AstEvalVisitor
         return r;
     }
 
-    Value visit(AstFunctionExpr node)
+    Value visit(AstCallExpr node)
     {
         void fnErr(char[] fmt, ...)
         {
@@ -193,9 +193,7 @@ class AstEvalVisitor
             return visitBase(node.args[i]);
         }
 
-        Value fnVar;
-        if( ! vars.resolve(node.ident, fnVar) )
-            err(node.loc, "unknown function '{}'", node.ident);
+        Value fnVar = visitBase(node.fnExpr);
 
         if( ! fnVar.isFunction )
             err(node.loc, "expected function, got {}", fnVar.tagName);
@@ -210,8 +208,8 @@ class AstEvalVisitor
             assert( fv.expr !is null );
 
             if( node.args.length != fv.args.length )
-                err(node.loc, "{}: expected {} argument{}, got {}",
-                        node.ident, fv.args.length,
+                err(node.loc, "expected {} argument{}, got {}",
+                        fv.args.length,
                         (fv.args.length == 1) ? "" : "s",
                         node.args.length);
 

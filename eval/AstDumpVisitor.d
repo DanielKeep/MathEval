@@ -43,7 +43,7 @@ class AstDumpVisitor
             return visit(stn);
         if( auto stn = cast(AstVariableExpr) node )
             return visit(stn);
-        if( auto stn = cast(AstFunctionExpr) node )
+        if( auto stn = cast(AstCallExpr) node )
             return visit(stn);
         if( auto stn = cast(AstUniformExpr) node )
             return visit(stn);
@@ -180,10 +180,12 @@ class AstDumpVisitor
         so.p(node.ident);
     }
 
-    void visit(AstFunctionExpr node)
+    void visit(AstCallExpr node)
     {
         so
-            .fl("(call {}", node.ident)
+            .p("(call ")
+            .seq({ visitBase(node.fnExpr); })
+            .l
             .push
             .seq(
             {
