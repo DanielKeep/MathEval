@@ -4,7 +4,7 @@
     Authors: Daniel Keep <daniel.keep@gmail.com>
     Copyright: See LICENSE.
 */
-module ReplTest;
+module Cli;
 
 import eval.Eval;
 import eval.Repl;
