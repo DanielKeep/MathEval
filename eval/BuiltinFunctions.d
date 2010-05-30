@@ -174,6 +174,13 @@ static this()
     fm["concat"]  = mk(&fnConcat, "s1", "s2", "...");
     fm["join"]    = mk(&fnJoin, "s", "s1", "s2", "...");
 
+    version( MathEval_Lists )
+    {
+        fm["cons"]  = mk(&fnCons, "a", "li");
+        fm["head"]  = mk(&fnHead, "li");
+        fm["tail"]  = mk(&fnTail, "li");
+    }
+
     fm["type"]    = mk(&fnType, "a");
     fm["logical"] = mk(&fnLogical, "a");
     fm["real"]    = mk(&fnReal, "a");
@@ -206,6 +213,19 @@ void expString(ErrDg err, char[] name, Value arg, size_t index)
 {
     if( !arg.isString )
         err("{}: expected string for argument {}, got {}",
+                name, index+1, arg.tagName);
+}
+
+void expList(ErrDg err, char[] name, Value[] args, size_t offset=0)
+{
+    foreach( i, arg ; args )
+        expList(err, name, arg, offset+i);
+}
+
+void expList(ErrDg err, char[] name, Value arg, size_t index)
+{
+    if( !arg.isList )
+        err("{}: expected list for argument {}, got {}",
                 name, index+1, arg.tagName);
 }
 
@@ -478,6 +498,46 @@ Value fnJoin(ErrDg err, size_t args, ArgDg getArg)
     return Value(s);
 }
 
+// Lists
+
+version( MathEval_Lists )
+{
+    Value fnCons(ErrDg err, size_t args, ArgDg getArg)
+    {
+        numArgs(err, "cons", 2, args);
+        Value[2] vs;
+        unpackArgs(err, "cons", vs, args, getArg);
+        expList(err, "cons", vs[1], 1);
+
+        auto li = new Value.ListNode;
+        li.v = new Value;
+        *li.v = vs[0];
+        li.n = vs[1].asList;
+
+        return Value(li);
+    }
+    
+    Value fnHead(ErrDg err, size_t args, ArgDg getArg)
+    {
+        numArgs(err, "head", 1, args);
+        Value[1] vs;
+        unpackArgs(err, "head", vs, args, getArg);
+        expList(err, "head", vs[0], 0);
+
+        return *vs[0].asList.v;
+    }
+    
+    Value fnTail(ErrDg err, size_t args, ArgDg getArg)
+    {
+        numArgs(err, "head", 1, args);
+        Value[1] vs;
+        unpackArgs(err, "head", vs, args, getArg);
+        expList(err, "head", vs[0], 0);
+
+        return Value(vs[0].asList.n);
+    }
+}
+
 // Output & Formatting
 
 Value fnPrint(ErrDg err, size_t args, ArgDg getArg)
@@ -580,6 +640,10 @@ Value fnString(ErrDg err, size_t args, ArgDg getArg)
     {
         case Value.Tag.Logical:
         case Value.Tag.Real:
+    version( MathEval_Lists )
+    {
+        case Value.Tag.List:
+    }
             return Value(arg.toString);
 
         case Value.Tag.String:
