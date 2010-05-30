@@ -8,23 +8,6 @@ module eval.Ast;
 
 import eval.Location;
 
-const char[][] AstNodeNames =
-[
-    "AstScript",
-    "AstLetVarStmt",
-    "AstLetFuncStmt",
-    "AstExprStmt",
-    "AstNumberExpr",
-    "AstStringExpr",
-    "AstLambdaExpr",
-    "AstBinaryExpr",
-    "AstUnaryExpr",
-    "AstVariableExpr",
-    "AstCallExpr",
-    "AstUniformExpr",
-    "AstSharedExpr",
-];
-
 abstract class AstNode
 {
     Location loc;
