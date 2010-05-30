@@ -11,6 +11,17 @@ module eval.StructuredOutput;
 import tango.io.model.IConduit : OutputStream;
 import tango.io.stream.Format : FormatOutput;
 
+/**
+  
+    r is for raw, it does naught but out',
+    f is for format, it throws strings about.
+    v is for vararg, because D is so shit,
+    l is for line, it makes a new it.
+    p is for print; f sans show-off,
+    that's all there is to this,
+    now go bugger off.
+
+*/
 final class StructuredOutput
 {
     alias StructuredOutput This;
