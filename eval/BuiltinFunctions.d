@@ -107,10 +107,11 @@ class BuiltinFunctions : Variables
 
 private:
 
+alias Function.Context Context;
 alias Function.ErrDg ErrDg;
 alias Function.ArgDg ArgDg;
-
 alias Function.NativeFn Fn;
+
 Function[char[]] fnMap;
 char[][] fnNames;
 
@@ -247,20 +248,20 @@ void unpackArgs(ErrDg err, char[] name, Value[] vs,
         v = getArg(i);
 }
 
-Value fnUnaryReal(char[] name, alias fn)(ErrDg err, size_t args, ArgDg getArg)
+Value fnUnaryReal(char[] name, alias fn)(ref Context ctx)
 {
     Value[1] vs;
-    unpackArgs(err, name, vs, args, getArg);
-    expReal(err, name, vs);
+    unpackArgs(ctx.err, name, vs, ctx.args, ctx.getArg);
+    expReal(ctx.err, name, vs);
 
     return Value(fn(vs[0].asReal));
 }
 
-Value fnBinaryReal(char[] name, alias fn)(ErrDg err, size_t args, ArgDg getArg)
+Value fnBinaryReal(char[] name, alias fn)(ref Context ctx)
 {
     Value[2] vs;
-    unpackArgs(err, name, vs, args, getArg);
-    expReal(err, name, vs);
+    unpackArgs(ctx.err, name, vs, ctx.args, ctx.getArg);
+    expReal(ctx.err, name, vs);
 
     return Value(fn(vs[0].asReal, vs[1].asReal));
 }
@@ -333,53 +334,53 @@ real poisson(real λ, real min, real max)
 
 // Branching
 
-Value fnIf(ErrDg err, size_t args, ArgDg getArg)
+Value fnIf(ref Context ctx)
 {
-    if( args != 3 )
-        err("if: expected 3 arguments, got {}", args);
+    if( ctx.args != 3 )
+        ctx.err("if: expected 3 arguments, got {}", ctx.args);
 
-    auto arg0 = getArg(0);
+    auto arg0 = ctx.getArg(0);
 
     if( !arg0.isLogical )
-        err("if: expected logical for argument 1, got {}", arg0.tagName);
+        ctx.err("if: expected logical for argument 1, got {}", arg0.tagName);
 
     if( arg0.asLogical )
-        return getArg(1);
+        return ctx.getArg(1);
     else
-        return getArg(2);
+        return ctx.getArg(2);
 }
 
 // Math
 
 alias fnUnaryReal!("abs", abs) fnAbs;
 
-Value fnMin(ErrDg err, size_t args, ArgDg getArg)
+Value fnMin(ref Context ctx)
 {
-    numArgs(err, "min", 2, args, false);
-    auto arg0 = getArg(0);
-    expReal(err, "min", arg0, 0);
+    numArgs(ctx.err, "min", 2, ctx.args, false);
+    auto arg0 = ctx.getArg(0);
+    expReal(ctx.err, "min", arg0, 0);
 
     real r = arg0.asReal;
-    for( size_t i=1; i<args; ++i )
+    for( size_t i=1; i<ctx.args; ++i )
     {
-        auto arg = getArg(i);
-        expReal(err, "min", arg, i);
+        auto arg = ctx.getArg(i);
+        expReal(ctx.err, "min", arg, i);
         r = min(r, arg.asReal);
     }
     return Value(r);
 }
 
-Value fnMax(ErrDg err, size_t args, ArgDg getArg)
+Value fnMax(ref Context ctx)
 {
-    numArgs(err, "max", 2, args, false);
-    auto arg0 = getArg(0);
-    expReal(err, "max", arg0, 0);
+    numArgs(ctx.err, "max", 2, ctx.args, false);
+    auto arg0 = ctx.getArg(0);
+    expReal(ctx.err, "max", arg0, 0);
 
     real r = arg0.asReal;
-    for( size_t i=1; i<args; ++i )
+    for( size_t i=1; i<ctx.args; ++i )
     {
-        auto arg = getArg(i);
-        expReal(err, "max", arg, i);
+        auto arg = ctx.getArg(i);
+        expReal(ctx.err, "max", arg, i);
         r = max(r, arg.asReal);
     }
     return Value(r);
@@ -412,11 +413,11 @@ alias fnUnaryReal!("ceil", ceil) fnCeil;
 alias fnUnaryReal!("round", round_nonCrazy) fnRound;
 alias fnUnaryReal!("trunc", trunc) fnTrunc;
 
-Value fnClamp(ErrDg err, size_t args, ArgDg getArg)
+Value fnClamp(ref Context ctx)
 {
     Value[3] vs;
-    unpackArgs(err, "clamp", vs, args, getArg);
-    expReal(err, "clamp", vs);
+    unpackArgs(ctx.err, "clamp", vs, ctx.args, ctx.getArg);
+    expReal(ctx.err, "clamp", vs);
 
     return Value(max(vs[1].asReal, min(vs[0].asReal, vs[2].asReal)));
 }
@@ -430,67 +431,67 @@ alias fnUnaryReal!("erfc", erfc) fnErfc;
 
 alias fnBinaryReal!("normal", normal) fnNormal;
 
-Value fnPoisson(ErrDg err, size_t args, ArgDg getArg)
+Value fnPoisson(ref Context ctx)
 {
-    if( args != 1 && args != 3 )
-        err("poisson: expected 1 or 3 args, got {}", args);
+    if( ctx.args != 1 && ctx.args != 3 )
+        ctx.err("poisson: expected 1 or 3 args, got {}", ctx.args);
 
     real λ, min, max;
 
-    if( args == 1 )
+    if( ctx.args == 1 )
     {
         Value[1] vs;
-        unpackArgs(err, "poisson", vs, args, getArg);
-        expReal(err, "poisson", vs);
+        unpackArgs(ctx.err, "poisson", vs, ctx.args, ctx.getArg);
+        expReal(ctx.err, "poisson", vs);
         λ = vs[0].asReal;
     }
-    else if( args == 3 )
+    else if( ctx.args == 3 )
     {
         Value[3] vs;
-        unpackArgs(err, "poisson", vs, args, getArg);
-        expReal(err, "poisson", vs);
+        unpackArgs(ctx.err, "poisson", vs, ctx.args, ctx.getArg);
+        expReal(ctx.err, "poisson", vs);
         λ = vs[0].asReal;
         min = vs[1].asReal;
         max = vs[2].asReal;
     }
     else
-        err("poisson: expected 1 or 3 args, got {}", args);
+        ctx.err("poisson: expected 1 or 3 args, got {}", ctx.args);
 
     return Value(poisson(λ, min, max));
 }
 
 // String
 
-Value fnConcat(ErrDg err, size_t args, ArgDg getArg)
+Value fnConcat(ref Context ctx)
 {
-    numArgs(err, "concat", 2, args, false);
+    numArgs(ctx.err, "concat", 2, ctx.args, false);
 
     char[] s;
 
-    for( size_t i=0; i<args; ++i )
+    for( size_t i=0; i<ctx.args; ++i )
     {
-        auto arg = getArg(i);
-        expString(err, "concat", arg, i);
+        auto arg = ctx.getArg(i);
+        expString(ctx.err, "concat", arg, i);
         s ~= arg.asString;
     }
 
     return Value(s);
 }
 
-Value fnJoin(ErrDg err, size_t args, ArgDg getArg)
+Value fnJoin(ref Context ctx)
 {
-    numArgs(err, "join", 3, args, false);
+    numArgs(ctx.err, "join", 3, ctx.args, false);
 
-    auto sepV = getArg(0); expString(err, "join", sepV, 0);
+    auto sepV = ctx.getArg(0); expString(ctx.err, "join", sepV, 0);
     auto sep = sepV.asString;
-    auto part0V = getArg(1); expString(err, "join", sepV, 1);
+    auto part0V = ctx.getArg(1); expString(ctx.err, "join", sepV, 1);
     auto part0 = part0V.asString;
 
     auto s = part0;
-    for( size_t i=2; i<args; ++i )
+    for( size_t i=2; i<ctx.args; ++i )
     {
-        auto part = getArg(i);
-        expString(err, "join", part, i);
+        auto part = ctx.getArg(i);
+        expString(ctx.err, "join", part, i);
         s ~= sep;
         s ~= part.asString;
     }
@@ -502,12 +503,12 @@ Value fnJoin(ErrDg err, size_t args, ArgDg getArg)
 
 version( MathEval_Lists )
 {
-    Value fnCons(ErrDg err, size_t args, ArgDg getArg)
+    Value fnCons(ref Context ctx)
     {
-        numArgs(err, "cons", 2, args);
+        numArgs(ctx.err, "cons", 2, ctx.args);
         Value[2] vs;
-        unpackArgs(err, "cons", vs, args, getArg);
-        expList(err, "cons", vs[1], 1);
+        unpackArgs(ctx.err, "cons", vs, ctx.args, ctx.getArg);
+        expList(ctx.err, "cons", vs[1], 1);
 
         auto li = new Value.ListNode;
         li.v = new Value;
@@ -517,22 +518,22 @@ version( MathEval_Lists )
         return Value(li);
     }
     
-    Value fnHead(ErrDg err, size_t args, ArgDg getArg)
+    Value fnHead(ref Context ctx)
     {
-        numArgs(err, "head", 1, args);
+        numArgs(ctx.err, "head", 1, ctx.args);
         Value[1] vs;
-        unpackArgs(err, "head", vs, args, getArg);
-        expList(err, "head", vs[0], 0);
+        unpackArgs(ctx.err, "head", vs, ctx.args, ctx.getArg);
+        expList(ctx.err, "head", vs[0], 0);
 
         return *vs[0].asList.v;
     }
     
-    Value fnTail(ErrDg err, size_t args, ArgDg getArg)
+    Value fnTail(ref Context ctx)
     {
-        numArgs(err, "head", 1, args);
+        numArgs(ctx.err, "head", 1, ctx.args);
         Value[1] vs;
-        unpackArgs(err, "head", vs, args, getArg);
-        expList(err, "head", vs[0], 0);
+        unpackArgs(ctx.err, "head", vs, ctx.args, ctx.getArg);
+        expList(ctx.err, "head", vs[0], 0);
 
         return Value(vs[0].asList.n);
     }
@@ -540,13 +541,13 @@ version( MathEval_Lists )
 
 // Output & Formatting
 
-Value fnPrint(ErrDg err, size_t args, ArgDg getArg)
+Value fnPrint(ref Context ctx)
 {
-    numArgs(err, "print", 1, args, false);
+    numArgs(ctx.err, "print", 1, ctx.args, false);
 
-    for( size_t i=0; i<args; ++i )
+    for( size_t i=0; i<ctx.args; ++i )
     {
-        auto arg = getArg(i);
+        auto arg = ctx.getArg(i);
         if( arg.isString )
             Stdout(arg.asString);
         else if( arg.isNil )
@@ -559,27 +560,27 @@ Value fnPrint(ErrDg err, size_t args, ArgDg getArg)
     return Value();
 }
 
-Value fnPrintLn(ErrDg err, size_t args, ArgDg getArg)
+Value fnPrintLn(ref Context ctx)
 {
-    fnPrint(err, args, getArg);
+    fnPrint(ctx);
     Stdout.newline;
     return Value();
 }
 
 // Meta
 
-Value fnType(ErrDg err, size_t args, ArgDg getArg)
+Value fnType(ref Context ctx)
 {
     Value[1] vs;
-    unpackArgs(err, "type", vs, args, getArg);
+    unpackArgs(ctx.err, "type", vs, ctx.args, ctx.getArg);
 
     return Value(vs[0].tagName);
 }
 
-Value fnLogical(ErrDg err, size_t args, ArgDg getArg)
+Value fnLogical(ref Context ctx)
 {
     Value[1] vs;
-    unpackArgs(err, "logical", vs, args, getArg);
+    unpackArgs(ctx.err, "logical", vs, ctx.args, ctx.getArg);
 
     auto arg = vs[0];
     switch( arg.tag )
@@ -595,18 +596,18 @@ Value fnLogical(ErrDg err, size_t args, ArgDg getArg)
             {
                 case "true":    return Value(true);
                 case "false":   return Value(false);
-                default:        err("logical: invalid value {}", arg.toString);
+                default:        ctx.err("logical: invalid value {}", arg.toString);
             }
 
         default:
-            err("logical: invalid value {}", arg.toString);
+            ctx.err("logical: invalid value {}", arg.toString);
     }
 }
 
-Value fnReal(ErrDg err, size_t args, ArgDg getArg)
+Value fnReal(ref Context ctx)
 {
     Value[1] vs;
-    unpackArgs(err, "real", vs, args, getArg);
+    unpackArgs(ctx.err, "real", vs, ctx.args, ctx.getArg);
 
     auto arg = vs[0];
     switch( arg.tag )
@@ -622,18 +623,18 @@ Value fnReal(ErrDg err, size_t args, ArgDg getArg)
             uint ate;
             auto v = Float.parse(arg.asString, &ate);
             if( ate == 0 )
-                err("real: invalid {}", arg.toString);
+                ctx.err("real: invalid {}", arg.toString);
             return Value(v);
         }
         default:
-            err("logical: invalid value {}", arg.toString);
+            ctx.err("logical: invalid value {}", arg.toString);
     }
 }
 
-Value fnString(ErrDg err, size_t args, ArgDg getArg)
+Value fnString(ref Context ctx)
 {
     Value[1] vs;
-    unpackArgs(err, "string", vs, args, getArg);
+    unpackArgs(ctx.err, "string", vs, ctx.args, ctx.getArg);
 
     auto arg = vs[0];
     switch( arg.tag )
@@ -650,7 +651,7 @@ Value fnString(ErrDg err, size_t args, ArgDg getArg)
             return arg;
 
         default:
-            err("logical: invalid value {}", arg.toString);
+            ctx.err("logical: invalid value {}", arg.toString);
     }
 }
 

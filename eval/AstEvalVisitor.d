@@ -267,8 +267,13 @@ class AstEvalVisitor
 
         Value r;
 
+        Function.Context ctx;
+        ctx.err = &fnErr;
+        ctx.args = args.length;
+        ctx.getArg = &getArg;
+
         if( fv.nativeFn !is null )
-            r = fv.nativeFn(&fnErr, args.length, &getArg);
+            r = fv.nativeFn(ctx);
         else
         {
             assert( fv.expr !is null );

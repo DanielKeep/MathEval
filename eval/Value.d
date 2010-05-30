@@ -209,14 +209,21 @@ struct Value
 
 class Function
 {
+    alias void delegate(char[], ...) ErrDg;
+    alias Value delegate(size_t) ArgDg;
+    alias Value function(ref Context) NativeFn;
+
+    struct Context
+    {
+        ErrDg err;
+        size_t args;
+        ArgDg getArg;
+    }
+
     struct Arg
     {
         char[] name;
     }
-
-    alias void delegate(char[], ...) ErrDg;
-    alias Value delegate(size_t) ArgDg;
-    alias Value function(ErrDg, size_t, ArgDg) NativeFn;
 
     Arg[] args;
     AstExpr expr;
