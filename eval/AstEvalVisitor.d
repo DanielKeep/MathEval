@@ -20,12 +20,29 @@ import tango.text.convert.Format;
 class AstEvalVisitor
 {
     LocErr err;
-    Variables vars;
+    Variables globals;
+    Variables locals;
 
     this(LocErr err, Variables vars)
     {
         this.err = err;
-        this.vars = vars;
+        this.globals = vars;
+    }
+
+    Variables vars()
+    {
+        if( locals !is null )
+            return locals;
+        else
+            return globals;
+    }
+
+    void withLocals(Variables locals, void delegate() dg)
+    {
+        auto oldLocals = this.locals;
+        this.locals = locals;
+        scope(exit) this.locals = oldLocals;
+        dg();
     }
 
     Value visitBase(AstNode node)
@@ -213,16 +230,15 @@ class AstEvalVisitor
                         (fv.args.length == 1) ? "" : "s",
                         node.args.length);
 
-            scope locals = new LocalVariables(this, vars);
+            scope locals = new LocalVariables(this, globals);
 
             foreach( i, arg ; fv.args )
                 locals.vars[arg.name] = node.args[i];
 
-            auto oldVars = vars;
-            vars = locals;
-            scope(exit) vars = oldVars;
-
-            r = visitBase(fv.expr);
+            withLocals(locals,
+            {
+                r = visitBase(fv.expr);
+            });
         }
 
         return r;
