@@ -170,6 +170,7 @@ class FunctionValue
     Arg[] args;
     AstExpr expr;
     NativeFn nativeFn;
+    Value[char[]] upvalues;
 
     char[] toString()
     {

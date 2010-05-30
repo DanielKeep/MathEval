@@ -21,7 +21,7 @@ class AstEvalVisitor
 {
     LocErr err;
     Variables globals;
-    Variables locals;
+    LocalVariables locals;
 
     this(LocErr err, Variables vars)
     {
@@ -37,7 +37,7 @@ class AstEvalVisitor
             return globals;
     }
 
-    void withLocals(Variables locals, void delegate() dg)
+    void withLocals(LocalVariables locals, void delegate() dg)
     {
         auto oldLocals = this.locals;
         this.locals = locals;
@@ -135,6 +135,15 @@ class AstEvalVisitor
         foreach( i, name ; node.args )
             fv.args[i].name = name;
         fv.expr = node.expr;
+        if( locals !is null )
+        {
+            foreach( name,_ ; locals.vars )
+            {
+                Value v;
+                assert( locals.resolve(name, v) );
+                fv.upvalues[name] = v;
+            }
+        }
         return Value(fv);
     }
 
@@ -231,6 +240,13 @@ class AstEvalVisitor
                         node.args.length);
 
             scope locals = new LocalVariables(this, globals);
+
+            foreach( name, value ; fv.upvalues )
+            {
+                // Cheat.  Quite a bit.
+                locals.vars[name] = null;
+                locals.vals[name] = value;
+            }
 
             foreach( i, arg ; fv.args )
                 locals.vars[arg.name] = node.args[i];
