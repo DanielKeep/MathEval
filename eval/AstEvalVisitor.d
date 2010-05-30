@@ -105,7 +105,7 @@ class AstEvalVisitor
 
     Value visit(AstLetFuncStmt node)
     {
-        auto fv = new FunctionValue;
+        auto fv = new Function;
         fv.args.length = node.args.length;
         foreach( i, name ; node.args )
             fv.args[i].name = name;
@@ -163,7 +163,7 @@ class AstEvalVisitor
 
     Value visit(AstLambdaExpr node)
     {
-        auto fv = new FunctionValue;
+        auto fv = new Function;
         fv.args.length = node.args.length;
         foreach( i, name ; node.args )
             fv.args[i].name = name;
@@ -253,7 +253,7 @@ class AstEvalVisitor
         return doCall(node.loc, fv, node.args);
     }
 
-    Value doCall(Location loc, FunctionValue fv, AstExpr[] args...)
+    Value doCall(Location loc, Function fv, AstExpr[] args...)
     {
         void fnErr(char[] fmt, ...)
         {

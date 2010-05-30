@@ -107,16 +107,16 @@ class BuiltinFunctions : Variables
 
 private:
 
-alias FunctionValue.ErrDg ErrDg;
-alias FunctionValue.ArgDg ArgDg;
+alias Function.ErrDg ErrDg;
+alias Function.ArgDg ArgDg;
 
-alias FunctionValue.NativeFn Fn;
-FunctionValue[char[]] fnMap;
+alias Function.NativeFn Fn;
+Function[char[]] fnMap;
 char[][] fnNames;
 
-FunctionValue mk(Fn fn, char[][] args...)
+Function mk(Fn fn, char[][] args...)
 {
-    auto f = new FunctionValue;
+    auto f = new Function;
     f.nativeFn = fn;
     f.args.length = args.length;
     foreach( i, arg ; args )

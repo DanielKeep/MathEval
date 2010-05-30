@@ -44,7 +44,7 @@ struct Value
         bool l;
         real r;
         char[] s;
-        FunctionValue f;
+        Function f;
 
         version( MathEval_Lists )
             ListNode* li;
@@ -82,7 +82,7 @@ struct Value
         return r;
     }
 
-    static Value opCall(FunctionValue v)
+    static Value opCall(Function v)
     {
         Value r;
         r.tag = Tag.Function;
@@ -148,7 +148,7 @@ struct Value
         return data.s;
     }
 
-    FunctionValue asFunction()
+    Function asFunction()
     {
         assert( tag == Tag.Function );
         return data.f;
@@ -207,7 +207,7 @@ struct Value
     }
 }
 
-class FunctionValue
+class Function
 {
     struct Arg
     {
@@ -222,11 +222,11 @@ class FunctionValue
     AstExpr expr;
     NativeFn nativeFn;
     Value[char[]] upvalues;
-    FunctionValue nextFn;
+    Function nextFn;
 
-    FunctionValue dup()
+    Function dup()
     {
-        auto r = new FunctionValue;
+        auto r = new Function;
         r.args = args;
         r.expr = expr;
         r.nativeFn = nativeFn;
