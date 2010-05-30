@@ -167,6 +167,7 @@ class AstBinaryExpr : AstExpr
         Exp,
         And,
         Or,
+        Comp,
     }
 
     Op op;
@@ -203,6 +204,7 @@ class AstBinaryExpr : AstExpr
             case Op.Exp:    return "Exp";
             case Op.And:    return "And";
             case Op.Or:     return "Or";
+            case Op.Comp:   return "Comp";
 
             default:        assert(false);
         }

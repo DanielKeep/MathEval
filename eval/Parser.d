@@ -132,6 +132,7 @@ Fixity fixityOf(AstBinaryExpr.Op op)
         case Op.Mod:        return L;
         case Op.Rem:        return L;
         case Op.Exp:        return R;
+        case Op.Comp:       return R;
 
         default:            assert(false, "missing binary op fixity");
     }
@@ -159,6 +160,7 @@ float precOf(AstBinaryExpr.Op op)
         case Op.Mod:        return 6.5;
         case Op.Rem:        return 6.5;
         case Op.Exp:        return 6.7;
+        case Op.Comp:       return 9.0;
 
         default:            assert(false, "missing binary op precedence");
     }
@@ -483,6 +485,7 @@ bool tryparseBinaryOp(TokenStream ts, out AstBinaryExpr.Op op)
         case TOKstarstar:   op = Op.Exp;    break;
         case TOKand:        op = Op.And;    break;
         case TOKor:         op = Op.Or;     break;
+        case TOKperiod:     op = Op.Comp;   break;
 
         default:            return false;
     }

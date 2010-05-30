@@ -368,6 +368,15 @@ left-hand side.
 For example, ``and`` will short-circuit at the first false encountered and
 ``or`` will short-circuit at the first true encountered.
 
+Miscellaneous
+-------------
+
+======= =========================== ======= ======= ===============
+Symbol  Meaning                     Prec.   Assoc.  Alternatives
+======= =========================== ======= ======= ===============
+``.``   Function composition        9.0     left
+======= =========================== ======= ======= ===============
+
 Constants
 =========
 
@@ -591,7 +600,8 @@ Symbol
            ├─'>='─┘
            ├─'>'──┘
            ├─'\'──┘
-           └─':'──┘
+           ├─':'──┘
+           └─'.'──┘
 
 Literal
 ```````
@@ -765,6 +775,7 @@ The grammar is otherwise complete.
                 | "+" | "-" | "*" | "/" | "//"
                 | "**"
                 | "and" | "or"
+                | "."
                 ;
 
     <unary op> = "+" | "-" | "not";

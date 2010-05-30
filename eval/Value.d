@@ -171,6 +171,17 @@ class FunctionValue
     AstExpr expr;
     NativeFn nativeFn;
     Value[char[]] upvalues;
+    FunctionValue nextFn;
+
+    FunctionValue dup()
+    {
+        auto r = new FunctionValue;
+        r.args = args;
+        r.expr = expr;
+        r.nativeFn = nativeFn;
+        r.nextFn = nextFn;
+        return r;
+    }
 
     char[] toString()
     {

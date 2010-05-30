@@ -37,6 +37,7 @@ const char[][2][] SymbolTokens =
     [">", "gt"],
     ["\\", "bslash"],
     [":", "colon"],
+    [".", "period"],
 ];
 
 const char[][] LiteralTokens =

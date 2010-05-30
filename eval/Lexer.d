@@ -59,6 +59,7 @@ bool lexSymbol(Source src, LexErr err, out Token token)
         case '-': l = 1; tok = TOKhyphen; break;
         case '\\':l = 1; tok = TOKbslash; break;
         case ':': l = 1; tok = TOKcolon; break;
+        case '.': l = 1; tok = TOKperiod; break;
 
         // multi-cp symbols
         case '!':
@@ -474,6 +475,9 @@ bool lexNumber(Source src, LexErr err, out Token token)
 
     if( cp0 == '.' )
     {
+        if( ! isDigit(src[1]) )
+            return false;
+
         src.advance;
         eatDigitSeq;
     }
@@ -596,11 +600,11 @@ bool lexNext(Source src, LexErr err, out Token token)
 
     if( lexEos(src, err, token) )           return true;
     if( lexEol(src, err, token) )           return true;
-    if( lexSymbol(src, err, token) )        return true;
     if( lexLiteral(src, err, token) )       return true;
     if( lexIdentifier(src, err, token) )    return true;
     if( lexNumber(src, err, token) )        return true;
     if( lexString(src, err, token) )        return true;
+    if( lexSymbol(src, err, token) )        return true;
     
     return false;
 }

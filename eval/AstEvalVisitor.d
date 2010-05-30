@@ -73,6 +73,8 @@ class AstEvalVisitor
             return visit(stn);
         if( auto stn = cast(AstSharedExpr) node )
             return visit(stn);
+        if( auto stn = cast(AstValue) node )
+            return visit(stn);
 
         return defaultVisit(node);
     }
@@ -176,6 +178,7 @@ class AstEvalVisitor
             case Op.Exp:    return binExp(&opErr, lhs, rhs);
             case Op.And:    return binAnd(&opErr, lhs, &rhs);
             case Op.Or:     return binOr(&opErr, lhs, &rhs);
+            case Op.Comp:   return binComp(&opErr, lhs, rhs);
             default:        assert(false);
         }
     }
@@ -209,35 +212,41 @@ class AstEvalVisitor
 
     Value visit(AstCallExpr node)
     {
-        void fnErr(char[] fmt, ...)
-        {
-            err(node.loc, "{}", Format.convert(_arguments, _argptr, fmt));
-        }
-
-        Value getArg(size_t i)
-        {
-            return visitBase(node.args[i]);
-        }
-
         Value fnVar = visitBase(node.fnExpr);
 
         if( ! fnVar.isFunction )
             err(node.loc, "expected function, got {}", fnVar.tagName);
 
         auto fv = fnVar.asFunction;
+        
+        return doCall(node.loc, fv, node.args);
+    }
+
+    Value doCall(Location loc, FunctionValue fv, AstExpr[] args...)
+    {
+        void fnErr(char[] fmt, ...)
+        {
+            err(loc, "{}", Format.convert(_arguments, _argptr, fmt));
+        }
+
+        Value getArg(size_t i)
+        {
+            return visitBase(args[i]);
+        }
+
         Value r;
 
         if( fv.nativeFn !is null )
-            r = fv.nativeFn(&fnErr, node.args.length, &getArg);
+            r = fv.nativeFn(&fnErr, args.length, &getArg);
         else
         {
             assert( fv.expr !is null );
 
-            if( node.args.length != fv.args.length )
-                err(node.loc, "expected {} argument{}, got {}",
+            if( args.length != fv.args.length )
+                err(loc, "expected {} argument{}, got {}",
                         fv.args.length,
                         (fv.args.length == 1) ? "" : "s",
-                        node.args.length);
+                        args.length);
 
             scope locals = new LocalVariables(this, globals);
 
@@ -249,13 +258,16 @@ class AstEvalVisitor
             }
 
             foreach( i, arg ; fv.args )
-                locals.vars[arg.name] = node.args[i];
+                locals.vars[arg.name] = args[i];
 
             withLocals(locals,
             {
                 r = visitBase(fv.expr);
             });
         }
+
+        if( fv.nextFn !is null )
+            r = doCall(loc, fv.nextFn, new AstValue(loc, r));
 
         return r;
     }
@@ -288,9 +300,25 @@ class AstEvalVisitor
             return v;
         }
     }
+
+    Value visit(AstValue node)
+    {
+        return node.value;
+    }
 }
 
 private:
+
+class AstValue : AstExpr
+{
+    Value value;
+
+    this(Location loc, Value value)
+    {
+        super(loc);
+        this.value = value;
+    }
+}
 
 class LocalVariables : Variables
 {
@@ -580,6 +608,19 @@ Value binOr(OpErr err, Value lhs, Value delegate() rhsDg)
     }
     else
         err("invalid left-hand type for logical or: {}", lhs.tagName);
+}
+
+Value binComp(OpErr err, Value lhs, Value rhs)
+{
+    if( lhs.isFunction && rhs.isFunction )
+    {
+        auto fn = lhs.asFunction.dup;
+        fn.nextFn = rhs.asFunction;
+        return Value(fn);
+    }
+    else
+        err("invalid types for function composition: {} and {}",
+                lhs.tagName, rhs.tagName);
 }
 
 Value unPos(OpErr err, Value val)
