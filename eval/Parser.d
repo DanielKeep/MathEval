@@ -361,11 +361,14 @@ AstLambdaExpr tryparseLambdaExpr(TokenStream ts)
 
     auto loc = ts.popExpect(TOKbslash).loc;
     char[][] args;
-    args ~= ts.popExpect(TOKident).text;
-    while( ts.peek.type == TOKcomma )
+    if( ts.peek.type == TOKident )
     {
-        ts.popExpect(TOKcomma);
         args ~= ts.popExpect(TOKident).text;
+        while( ts.peek.type == TOKcomma )
+        {
+            ts.popExpect(TOKcomma);
+            args ~= ts.popExpect(TOKident).text;
+        }
     }
     ts.popExpect(TOKcolon);
 

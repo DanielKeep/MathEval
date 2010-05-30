@@ -139,7 +139,6 @@ class AstLambdaExpr : AstExpr
 
     this(Location loc, char[][] args, AstExpr expr)
     {
-        assert( args.length >= 1 );
         assert( expr !is null );
         super(loc);
 
