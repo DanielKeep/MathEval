@@ -182,6 +182,7 @@ static this()
         fm["tail"]  = mk(&fnTail, "li");
         fm["map"]   = mk(&fnMap_, "f", "li");
         fm["filter"]= mk(&fnFilter, "f", "li");
+        fm["apply"] = mk(&fnApply, "f", "li");
     }
 
     fm["type"]    = mk(&fnType, "a");
@@ -631,6 +632,28 @@ version( MathEval_Lists )
         }
 
         return Value(head);
+    }
+
+    Value fnApply(ref Context ctx)
+    {
+        numArgs(ctx.err, "apply", 1, ctx.args);
+        Value[2] vs;
+        unpackArgs(ctx.err, "apply", vs, ctx.args, ctx.getArg);
+        expFunction(ctx.err, "apply", vs[0], 0);
+        expList(ctx.err, "apply", vs[1], 1);
+
+        auto fv = vs[0].asFunction;
+        auto li = vs[1].asList;
+
+        Value[] argVals;
+
+        while( li !is null )
+        {
+            argVals ~= *li.v;
+            li = li.n;
+        }
+
+        return ctx.invoke(fv, argVals);
     }
 }
 
