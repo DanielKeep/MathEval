@@ -265,12 +265,22 @@ class AstEvalVisitor
             return visitBase(args[i]);
         }
 
+        Value invoke(Function fv, Value[] argVals)
+        {
+            auto argExprs = new AstExpr[](argVals.length);
+            foreach( i, arg ; argVals )
+                argExprs[i] = new AstValue(loc, arg);
+
+            return doCall(loc, fv, argExprs);
+        }
+
         Value r;
 
         Function.Context ctx;
         ctx.err = &fnErr;
         ctx.args = args.length;
         ctx.getArg = &getArg;
+        ctx.invoke = &invoke;
 
         if( fv.nativeFn !is null )
             r = fv.nativeFn(ctx);

@@ -180,6 +180,8 @@ static this()
         fm["cons"]  = mk(&fnCons, "a", "li");
         fm["head"]  = mk(&fnHead, "li");
         fm["tail"]  = mk(&fnTail, "li");
+        fm["map"]   = mk(&fnMap_, "f", "li");
+        fm["filter"]= mk(&fnFilter, "f", "li");
     }
 
     fm["type"]    = mk(&fnType, "a");
@@ -217,17 +219,33 @@ void expString(ErrDg err, char[] name, Value arg, size_t index)
                 name, index+1, arg.tagName);
 }
 
-void expList(ErrDg err, char[] name, Value[] args, size_t offset=0)
+void expFunction(ErrDg err, char[] name, Value[] args, size_t offset=0)
 {
     foreach( i, arg ; args )
-        expList(err, name, arg, offset+i);
+        expFunction(err, name, arg, offset+i);
 }
 
-void expList(ErrDg err, char[] name, Value arg, size_t index)
+void expFunction(ErrDg err, char[] name, Value arg, size_t index)
 {
-    if( !arg.isList )
-        err("{}: expected list for argument {}, got {}",
+    if( !arg.isFunction )
+        err("{}: expected function for argument {}, got {}",
                 name, index+1, arg.tagName);
+}
+
+version( MathEval_Lists )
+{
+    void expList(ErrDg err, char[] name, Value[] args, size_t offset=0)
+    {
+        foreach( i, arg ; args )
+            expList(err, name, arg, offset+i);
+    }
+
+    void expList(ErrDg err, char[] name, Value arg, size_t index)
+    {
+        if( !arg.isList )
+            err("{}: expected list for argument {}, got {}",
+                    name, index+1, arg.tagName);
+    }
 }
 
 void numArgs(ErrDg err, char[] name, size_t exp, size_t args, bool exact=true)
@@ -536,6 +554,83 @@ version( MathEval_Lists )
         expList(ctx.err, "head", vs[0], 0);
 
         return Value(vs[0].asList.n);
+    }
+
+    Value fnMap_(ref Context ctx)
+    {
+        numArgs(ctx.err, "map", 1, ctx.args);
+        Value[2] vs;
+        unpackArgs(ctx.err, "map", vs, ctx.args, ctx.getArg);
+        expFunction(ctx.err, "map", vs[0], 0);
+        expList(ctx.err, "map", vs[1], 1);
+
+        auto fv = vs[0].asFunction;
+        auto li = vs[1].asList;
+
+        Value.ListNode* head, tail;
+
+        while( li !is null )
+        {
+            if( head is null )
+            {
+                head = tail = new Value.ListNode;
+            }
+            else
+            {
+                tail.n = new Value.ListNode;
+                tail = tail.n;
+            }
+            tail.v = new Value;
+            Value[1] argVals;
+            argVals[0] = *li.v;
+            *tail.v = ctx.invoke(fv, argVals);
+            li = li.n;
+        }
+
+        return Value(head);
+    }
+
+    Value fnFilter(ref Context ctx)
+    {
+        numArgs(ctx.err, "filter", 1, ctx.args);
+        Value[2] vs;
+        unpackArgs(ctx.err, "filter", vs, ctx.args, ctx.getArg);
+        expFunction(ctx.err, "filter", vs[0], 0);
+        expList(ctx.err, "filter", vs[1], 1);
+
+        auto fv = vs[0].asFunction;
+        auto li = vs[1].asList;
+
+        Value.ListNode* head, tail;
+
+        while( li !is null )
+        {
+            Value[1] argVals;
+            argVals[0] = *li.v;
+            auto fr = ctx.invoke(fv, argVals);
+            if( !fr.isLogical )
+                ctx.err("filter: expected logical result from filter, "
+                        "got {}", fr.tagName);
+
+            if( fr.asLogical )
+            {
+                if( head is null )
+                {
+                    head = tail = new Value.ListNode;
+                }
+                else
+                {
+                    tail.n = new Value.ListNode;
+                    tail = tail.n;
+                }
+                tail.v = new Value;
+                *tail.v = *li.v;
+            }
+
+            li = li.n;
+        }
+
+        return Value(head);
     }
 }
 

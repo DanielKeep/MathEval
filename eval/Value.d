@@ -211,6 +211,7 @@ class Function
 {
     alias void delegate(char[], ...) ErrDg;
     alias Value delegate(size_t) ArgDg;
+    alias Value delegate(Function, Value[]) InvokeDg;
     alias Value function(ref Context) NativeFn;
 
     struct Context
@@ -218,6 +219,7 @@ class Function
         ErrDg err;
         size_t args;
         ArgDg getArg;
+        InvokeDg invoke;
     }
 
     struct Arg
