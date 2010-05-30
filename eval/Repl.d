@@ -31,9 +31,14 @@ private class Stop : Exception
 
 void startRepl()
 {
-    void prompt()
+    void prompt(size_t depth=0)
     {
-        Stdout(">>> ").flush;
+        if( depth == 0 )
+            Stdout(">>> ").flush;
+        else if( depth < 100 )
+            Stdout.format("{,2}> ", depth).flush;
+        else
+            Stdout("~~> ").flush;
     }
 
     void help()
@@ -165,6 +170,24 @@ replLoop:
         try
         {
             scope src = new Source(name, line.dup);
+            size_t depth = 0;
+            {
+                scope tmpTs = new TokenStream(src, &lexNext, &error);
+                depth = parseDepth(tmpTs);
+            }
+            src.reset();
+            size_t lineNum = 1;
+            while( depth > 0 )
+            {
+                prompt(depth);
+                char[] nextLine;
+                if( ! Cin.readln(nextLine) )
+                    return;
+                src.reset(name, src.src ~ "\n" ~ nextLine);
+                scope lineSrc = new Source(name, nextLine, ++lineNum, 1);
+                scope lineTs = new TokenStream(lineSrc, &lexNext, &error);
+                depth = parseDepth(lineTs, depth);
+            }
             scope ts = new TokenStream(src, &lexNext, &error);
             script = parseScript(ts);
         }

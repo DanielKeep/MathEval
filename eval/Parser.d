@@ -577,3 +577,31 @@ AstExpr sharedExpr(AstExpr expr)
     return new AstSharedExpr(expr.loc, expr);
 }
 
+size_t parseDepth(TokenStream ts, size_t start=0)
+{
+    size_t depth = start;
+    while( true )
+    {
+        switch( ts.pop.type )
+        {
+            case TOKlbracket:
+            case TOKlparen:
+                assert( depth < depth.max, "expression too deep" );
+                ++depth;
+                break;
+
+            case TOKrbracket:
+            case TOKrparen:
+                if( depth == 0 ) return 0; // oh DEAR
+                --depth;
+                break;
+
+            case TOKeos:
+                return depth;
+
+            default:
+        }
+    }
+    return depth;
+}
+

@@ -11,10 +11,11 @@ import eval.Location;
 
 final class Source
 {
+    char[] name, src;
+    
     this(char[] name, char[] src)
     {
-        this.name = name;
-        this.src = src;
+        reset(name, src);
     }
 
     /**
@@ -24,11 +25,28 @@ final class Source
     */
     this(char[] name, char[] src, uint line, uint col)
     {
+        reset(name, src, line, col);
+    }
+
+    void reset()
+    {
+        reset(name, src);
+    }
+
+    void reset(char[] name, char[] src)
+    {
+        this.name = name;
+        this.src = src;
+        this.mark = Mark.init;
+    }
+
+    void reset(char[] name, char[] src, uint line, uint col)
+    {
         // TODO: enforce
         assert( line >= 1 );
         assert( col >= 1 );
 
-        this(name, src);
+        reset(name, src);
         this.mark.line = line;
         this.mark.column = col;
     }
@@ -181,7 +199,6 @@ final class Source
 
 private:
     Mark mark;
-    char[] name, src;
 }
 
 version( Unittest )
