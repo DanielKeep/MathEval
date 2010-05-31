@@ -183,6 +183,7 @@ static this()
         fm["map"]   = mk(&fnMap_, "f", "li");
         fm["filter"]= mk(&fnFilter, "f", "li");
         fm["apply"] = mk(&fnApply, "f", "li");
+        fm["seq"]   = mk(&fnSeq, "a", "b", "c");
     }
 
     fm["type"]    = mk(&fnType, "a");
@@ -654,6 +655,73 @@ version( MathEval_Lists )
         }
 
         return ctx.invoke(fv, argVals);
+    }
+
+    Value fnSeq(ref Context ctx)
+    {
+        if( !( 1 <= ctx.args && ctx.args <= 3 ) )
+            ctx.err("seq: expected 1, 2 or 3 args; got {}", ctx.args);
+
+        Value[3] vs;
+
+        real a, b, step;
+
+        if( ctx.args == 1 )
+        {
+            unpackArgs(ctx.err, "seq", vs[0..1], ctx.args, ctx.getArg);
+            expReal(ctx.err, "seq", vs[0..1]);
+            a = 1;
+            b = vs[0].asReal;
+            step = (b >= 0.0) ? 1 : -1;
+        }
+        else if( ctx.args == 2 )
+        {
+            unpackArgs(ctx.err, "seq", vs[0..2], ctx.args, ctx.getArg);
+            expReal(ctx.err, "seq", vs[0..2]);
+            a = vs[0].asReal;
+            b = vs[1].asReal;
+            step = (a <= b) ? 1 : -1;
+        }
+        else
+        {
+            assert( ctx.args == 3 );
+            unpackArgs(ctx.err, "seq", vs[0..3], ctx.args, ctx.getArg);
+            expReal(ctx.err, "seq", vs[0..3]);
+            a = vs[0].asReal;
+            b = vs[1].asReal;
+            step = vs[2].asReal;
+        }
+
+        Value.ListNode* head, tail;
+
+        void addValue(real x)
+        {
+            if( head is null )
+            {
+                head = tail = new Value.ListNode;
+                head.v = new Value;
+                *head.v = Value(x);
+            }
+            else
+            {
+                tail.n = new Value.ListNode;
+                tail = tail.n;
+                tail.v = new Value;
+                *tail.v = Value(x);
+            }
+        }
+
+        if( step == 0.0 )
+            ctx.err("seq: cannot have step of zero");
+
+        if( step > 0.0 )
+            for( real v=a; v<=b; v+=step )
+                addValue(v);
+        else
+            for( real v=a; v>=b; v+=step )
+                addValue(v);
+
+        return Value(head);
     }
 }
 
