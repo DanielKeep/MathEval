@@ -136,29 +136,26 @@ class AstEvalVisitor
     version( MathEval_Lists )
         Value visit(AstListExpr node)
         {
-            Value.ListNode* head, tail;
+            List.Node* head, tail;
             if( node.elements.length > 0 )
             {
                 foreach( el ; node.elements )
                 {
                     if( head is null )
                     {
-                        head = tail = new Value.ListNode;
+                        head = tail = new List.Node;
                     }
                     else
                     {
-                        tail.n = new Value.ListNode;
+                        tail.n = new List.Node;
                         tail = tail.n;
                     }
-
-                    auto v = new Value;
-                    *v = visitBase(el);
-                    tail.v = v;
+                    tail.v = visitBase(el);
                 }
                 return Value(head);
             }
             else
-                return Value(cast(Value.ListNode*) null);
+                return Value(cast(List.Node*) null);
         }
 
     Value visit(AstLambdaExpr node)

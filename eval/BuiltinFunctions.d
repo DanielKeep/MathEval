@@ -621,7 +621,7 @@ version( MathEval_Lists )
     {
         expList(ctx.err, "concat", vs[1..$], 1);
 
-        Value.ListNode* head, tail;
+        List.Node* head, tail;
 
         foreach( arg ; vs )
         {
@@ -631,15 +631,14 @@ version( MathEval_Lists )
             {
                 if( head is null )
                 {
-                    head = tail = new Value.ListNode;
+                    head = tail = new List.Node;
                 }
                 else
                 {
-                    tail.n = new Value.ListNode;
+                    tail.n = new List.Node;
                     tail = tail.n;
                 }
-                tail.v = new Value;
-                *tail.v = *li.v;
+                tail.v = li.v;
 
                 li = li.n;
             }
@@ -692,7 +691,7 @@ version( MathEval_Lists )
 
         auto sep = vs[0].asList;
 
-        Value.ListNode* head, tail;
+        List.Node* head, tail;
 
         foreach( i, arg ; vs[1..$] )
         {
@@ -702,14 +701,13 @@ version( MathEval_Lists )
                 while( li !is null )
                 {
                     if( head is null )
-                        head = tail = new Value.ListNode;
+                        head = tail = new List.Node;
                     else
                     {
-                        tail.n = new Value.ListNode;
+                        tail.n = new List.Node;
                         tail = tail.n;
                     }
-                    tail.v = new Value;
-                    *tail.v = *li.v;
+                    tail.v = li.v;
                     li = li.n;
                 }
             }
@@ -719,14 +717,13 @@ version( MathEval_Lists )
             while( li !is null )
             {
                 if( head is null )
-                    head = tail = new Value.ListNode;
+                    head = tail = new List.Node;
                 else
                 {
-                    tail.n = new Value.ListNode;
+                    tail.n = new List.Node;
                     tail = tail.n;
                 }
-                tail.v = new Value;
-                *tail.v = *li.v;
+                tail.v = li.v;
                 li = li.n;
             }
         }
@@ -748,9 +745,8 @@ version( MathEval_Lists )
         unpackArgs(ctx.err, "cons", vs, ctx.args, ctx.getArg);
         expList(ctx.err, "cons", vs[1], 1);
 
-        auto li = new Value.ListNode;
-        li.v = new Value;
-        *li.v = vs[0];
+        auto li = new List.Node;
+        li.v = vs[0];
         li.n = vs[1].asList.head;
 
         return Value(li);
@@ -763,7 +759,7 @@ version( MathEval_Lists )
         unpackArgs(ctx.err, "head", vs, ctx.args, ctx.getArg);
         expList(ctx.err, "head", vs[0], 0);
 
-        return *vs[0].asList.head.v;
+        return vs[0].asList.head.v;
     }
     
     Value fnTail(ref Context ctx)
@@ -787,23 +783,22 @@ version( MathEval_Lists )
         auto fv = vs[0].asFunction;
         auto li = vs[1].asList.head;
 
-        Value.ListNode* head, tail;
+        List.Node* head, tail;
 
         while( li !is null )
         {
             if( head is null )
             {
-                head = tail = new Value.ListNode;
+                head = tail = new List.Node;
             }
             else
             {
-                tail.n = new Value.ListNode;
+                tail.n = new List.Node;
                 tail = tail.n;
             }
-            tail.v = new Value;
             Value[1] argVals;
-            argVals[0] = *li.v;
-            *tail.v = ctx.invoke(fv, argVals);
+            argVals[0] = li.v;
+            tail.v = ctx.invoke(fv, argVals);
             li = li.n;
         }
 
@@ -821,12 +816,12 @@ version( MathEval_Lists )
         auto fv = vs[0].asFunction;
         auto li = vs[1].asList.head;
 
-        Value.ListNode* head, tail;
+        List.Node* head, tail;
 
         while( li !is null )
         {
             Value[1] argVals;
-            argVals[0] = *li.v;
+            argVals[0] = li.v;
             auto fr = ctx.invoke(fv, argVals);
             if( !fr.isLogical )
                 ctx.err("filter: expected logical result from filter, "
@@ -836,15 +831,14 @@ version( MathEval_Lists )
             {
                 if( head is null )
                 {
-                    head = tail = new Value.ListNode;
+                    head = tail = new List.Node;
                 }
                 else
                 {
-                    tail.n = new Value.ListNode;
+                    tail.n = new List.Node;
                     tail = tail.n;
                 }
-                tail.v = new Value;
-                *tail.v = *li.v;
+                tail.v = li.v;
             }
 
             li = li.n;
@@ -868,7 +862,7 @@ version( MathEval_Lists )
 
         while( li !is null )
         {
-            argVals ~= *li.v;
+            argVals ~= li.v;
             li = li.n;
         }
 
@@ -910,22 +904,20 @@ version( MathEval_Lists )
             step = vs[2].asReal;
         }
 
-        Value.ListNode* head, tail;
+        List.Node* head, tail;
 
         void addValue(real x)
         {
             if( head is null )
             {
-                head = tail = new Value.ListNode;
-                head.v = new Value;
-                *head.v = Value(x);
+                head = tail = new List.Node;
+                head.v = Value(x);
             }
             else
             {
-                tail.n = new Value.ListNode;
+                tail.n = new List.Node;
                 tail = tail.n;
-                tail.v = new Value;
-                *tail.v = Value(x);
+                tail.v = Value(x);
             }
         }
 

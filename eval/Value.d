@@ -32,46 +32,6 @@ struct Value
         List,
     }
 
-    version( MathEval_Lists )
-    {
-        struct ListHead
-        {
-            ListNode* head;
-
-            static ListHead opCall(ListNode* head)
-            {
-                ListHead r;
-                r.head = head;
-                return r;
-            }
-
-            bool opEquals(ListHead rhs)
-            {
-                auto lhs = this;
-
-                auto lhsN = lhs.head;
-                auto rhsN = rhs.head;
-
-                while( lhsN !is null && rhsN !is null )
-                {
-                    if( (*lhsN.v) != (*rhsN.v) )
-                        return false;
-
-                    lhsN = lhsN.n;
-                    rhsN = rhsN.n;
-                }
-
-                return (lhsN is null && rhsN is null);
-            }
-        }
-
-        struct ListNode
-        {
-            Value* v;
-            ListNode* n;
-        }
-    }
-
     union Data
     {
         bool l;
@@ -80,7 +40,7 @@ struct Value
         Function f;
 
         version( MathEval_Lists )
-            ListHead li;
+            List li;
     }
 
     Tag tag;
@@ -125,7 +85,7 @@ struct Value
 
     version( MathEval_Lists )
     {
-        static Value opCall(ListHead v)
+        static Value opCall(List v)
         {
             Value r;
             r.tag = Tag.List;
@@ -133,7 +93,7 @@ struct Value
             return r;
         }
 
-        static Value opCall(ListNode* v)
+        static Value opCall(List.Node* v)
         {
             Value r;
             r.tag = Tag.List;
@@ -198,7 +158,7 @@ struct Value
     }
 
     version( MathEval_Lists )
-        ListHead asList()
+        List asList()
         {
             assert( tag == Tag.List );
             return data.li;
@@ -239,7 +199,7 @@ struct Value
                 {
                     if( s != "" )
                         s ~= ", ";
-                    s ~= (n.v !is null) ? n.v.toString : "nil";
+                    s ~= n.v.toString;
                     n = n.n;
                 }
                 return "["~s~"]";
@@ -321,6 +281,46 @@ class Function
     {
         // TODO
         return "function";
+    }
+}
+
+version( MathEval_Lists )
+{
+    struct List
+    {
+        struct Node
+        {
+            Value v;
+            Node* n;
+        }
+
+        Node* head;
+
+        static List opCall(Node* head)
+        {
+            List r;
+            r.head = head;
+            return r;
+        }
+
+        bool opEquals(List rhs)
+        {
+            auto lhs = this;
+
+            auto lhsN = lhs.head;
+            auto rhsN = rhs.head;
+
+            while( lhsN !is null && rhsN !is null )
+            {
+                if( lhsN.v != rhsN.v )
+                    return false;
+
+                lhsN = lhsN.n;
+                rhsN = rhsN.n;
+            }
+
+            return (lhsN is null && rhsN is null);
+        }
     }
 }
 
