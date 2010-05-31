@@ -191,6 +191,7 @@ static this()
         fm["cons"]  = mk(&fnCons, "a", "li");
         fm["head"]  = mk(&fnHead, "li");
         fm["tail"]  = mk(&fnTail, "li");
+        fm["nth"]   = mk(&fnNth, "n", "li");
         fm["map"]   = mk(&fnMap_, "f", "li");
         fm["filter"]= mk(&fnFilter, "f", "li");
         fm["apply"] = mk(&fnApply, "f", "li");
@@ -770,6 +771,30 @@ version( MathEval_Lists )
         expList(ctx.err, "head", vs[0], 0);
 
         return Value(vs[0].asList.head.n);
+    }
+
+    Value fnNth(ref Context ctx)
+    {
+        numArgs(ctx.err, "nth", 2, ctx.args);
+        Value[2] vs;
+        unpackArgs(ctx.err, "nth", vs, ctx.args, ctx.getArg);
+        expReal(ctx.err, "nth", vs[0], 0);
+        expList(ctx.err, "nth", vs[1], 1);
+
+        auto n = vs[0].asReal;
+        auto li = vs[1].asList.head;
+
+        while( li !is null )
+        {
+            if( n <= 0.0 )
+                return li.v;
+
+            n -= 1.0;
+            li = li.n;
+        }
+
+        ctx.err("nth: index out of bounds");
+        assert(false);
     }
 
     Value fnMap_(ref Context ctx)

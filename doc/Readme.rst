@@ -500,19 +500,21 @@ Name                Description
                     evaluate a parameter unless it is used.
 =================== ===========================================================
 
-String
-------
+Sequence
+--------
+
+These functions, unless specified, apply to all sequences: lists and settings.
 
 ======================= =======================================================
 Name                    Description
 ======================= =======================================================
-``concat(s1,s2,...)``   Concatenates two or more strings together.
-``join(s,s1,s2,...)``   Concatenates two or more strings together, placing *s*
-                        between each argument.
+``concat(s1,s2,...)``   Concatenates two or more sequences together.
+``join(s,s1,s2,...)``   Concatenates two or more sequences together, placing
+                        *s* between each argument.
 ======================= =======================================================
 
 List
-----
+````
 
 **Note**: List support may not be available.
 
@@ -522,7 +524,13 @@ Name                    Description
 ``apply(f,li)``         Calls *f* with the contents of *li* as its arguments.
 ``cons(a,li)``          Constructs a new list with *a* in front of the
                         elements of *li*.
+``filter(f,li)``        Returns all elements *e* of *li* for which the result
+                        of *f*\ (*e*) is *true*.
 ``head(li)``            Returns the first element of the list *li*.
+``map(f,li)``           Transform the elements of *li* by passing each through
+                        *f*.
+``nth(n,li)``           Returns the *n*\ th element of the list.  Note that
+                        this takes O(*n*) time.
 ``tail(li)``            Returns everything after the first element of the list
                         *li*.
 ======================= =======================================================
