@@ -129,51 +129,51 @@ static this()
 {
     alias fnMap fm;
 
-    fm["if"]      = mk(&fnIf, "l", "a", "b");
+    fm["if"]        = mk(&fnIf, "l", "a", "b");
 
-    fm["abs"]     = mk(&fnAbs, "x");
-    fm["min"]     = mk(&fnMin, "x", "y", "...");
-    fm["max"]     = mk(&fnMax, "x", "y", "...");
+    fm["abs"]       = mk(&fnAbs, "x");
+    fm["min"]       = mk(&fnMin, "x", "y", "...");
+    fm["max"]       = mk(&fnMax, "x", "y", "...");
             
-    fm["cos"]     = mk(&fnCos, "x");
-    fm["sin"]     = mk(&fnSin, "x");
-    fm["tan"]     = mk(&fnTan, "x");
+    fm["cos"]       = mk(&fnCos, "x");
+    fm["sin"]       = mk(&fnSin, "x");
+    fm["tan"]       = mk(&fnTan, "x");
 
-    fm["acos"]    = mk(&fnAcos, "x");
-    fm["asin"]    = mk(&fnAsin, "x");
-    fm["atan"]    = mk(&fnAtan, "x");
-    fm["atan2"]   = mk(&fnAtan2, "x");
+    fm["acos"]      = mk(&fnAcos, "x");
+    fm["asin"]      = mk(&fnAsin, "x");
+    fm["atan"]      = mk(&fnAtan, "x");
+    fm["atan2"]     = mk(&fnAtan2, "x");
 
-    fm["cosh"]    = mk(&fnCosh, "x");
-    fm["sinh"]    = mk(&fnSinh, "x");
-    fm["tanh"]    = mk(&fnTanh, "x");
+    fm["cosh"]      = mk(&fnCosh, "x");
+    fm["sinh"]      = mk(&fnSinh, "x");
+    fm["tanh"]      = mk(&fnTanh, "x");
 
-    fm["acosh"]   = mk(&fnAcosh, "x");
-    fm["asinh"]   = mk(&fnAsinh, "x");
-    fm["atanh"]   = mk(&fnAtanh, "x");
+    fm["acosh"]     = mk(&fnAcosh, "x");
+    fm["asinh"]     = mk(&fnAsinh, "x");
+    fm["atanh"]     = mk(&fnAtanh, "x");
 
-    fm["sqrt"]    = mk(&fnSqrt, "x");
-    fm["log"]     = mk(&fnLog, "x");
-    fm["log2"]    = mk(&fnLog2, "x");
-    fm["log10"]   = mk(&fnLog10, "x");
+    fm["sqrt"]      = mk(&fnSqrt, "x");
+    fm["log"]       = mk(&fnLog, "x");
+    fm["log2"]      = mk(&fnLog2, "x");
+    fm["log10"]     = mk(&fnLog10, "x");
 
-    fm["floor"]   = mk(&fnFloor, "x");
-    fm["ceil"]    = mk(&fnCeil, "x");
-    fm["round"]   = mk(&fnRound, "x");
-    fm["trunc"]   = mk(&fnTrunc, "x");
-    fm["clamp"]   = mk(&fnClamp, "y", "x", "z");
+    fm["floor"]     = mk(&fnFloor, "x");
+    fm["ceil"]      = mk(&fnCeil, "x");
+    fm["round"]     = mk(&fnRound, "x");
+    fm["trunc"]     = mk(&fnTrunc, "x");
+    fm["clamp"]     = mk(&fnClamp, "y", "x", "z");
 
-    fm["erf"]     = mk(&fnErf, "x");
-    fm["erfc"]    = mk(&fnErfc, "x");
+    fm["erf"]       = mk(&fnErf, "x");
+    fm["erfc"]      = mk(&fnErfc, "x");
 
-    fm["normal"]  = mk(&fnNormal, "μ", "σ");
-    fm["poisson"] = mk(&fnPoisson, "λ", "x", "y");
+    fm["normal"]    = mk(&fnNormal, "μ", "σ");
+    fm["poisson"]   = mk(&fnPoisson, "λ", "x", "y");
 
-    fm["print"]   = mk(&fnPrint, "a", "...");
-    fm["printLn"] = mk(&fnPrintLn, "a", "...");
+    fm["print"]     = mk(&fnPrint, "a", "...");
+    fm["printLn"]   = mk(&fnPrintLn, "a", "...");
 
-    fm["concat"]  = mk(&fnConcat, "s1", "s2", "...");
-    fm["join"]    = mk(&fnJoin, "s", "s1", "s2", "...");
+    fm["concat"]    = mk(&fnConcat, "s1", "s2", "...");
+    fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
 
     version( MathEval_Lists )
     {
@@ -186,10 +186,10 @@ static this()
         fm["seq"]   = mk(&fnSeq, "a", "b", "c");
     }
 
-    fm["type"]    = mk(&fnType, "a");
-    fm["logical"] = mk(&fnLogical, "a");
-    fm["real"]    = mk(&fnReal, "a");
-    fm["string"]  = mk(&fnString, "a");
+    fm["type"]      = mk(&fnType, "a");
+    fm["logical"]   = mk(&fnLogical, "a");
+    fm["real"]      = mk(&fnReal, "a");
+    fm["string"]    = mk(&fnString, "a");
 
     fnNames = fm.keys;
     fnNames.sort;
