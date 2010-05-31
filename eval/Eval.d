@@ -15,6 +15,7 @@ import eval.Lexer;
 import eval.Location;
 import eval.Source;
 import eval.TokenStream;
+import eval.Variables;
 import eval.VariableStore;
 
 import tango.io.Stdout;
@@ -29,7 +30,13 @@ class Stop : Exception
     }
 }
 
-bool evalFile(char[] path)
+bool evalFile(char[] path, Variables existing=null)
+{
+    Variables _a;
+    return evalFile(path, existing, _a);
+}
+
+bool evalFile(char[] path, Variables existing, out Variables vars)
 {
     void error(Location loc, char[] fmt, ...)
     {
@@ -38,9 +45,15 @@ bool evalFile(char[] path)
         throw new Stop;
     }
 
-    scope bivars = new BuiltinVariables;
-    scope bifunc = new BuiltinFunctions(bivars);
-    scope vars = new VariableStore(bifunc);
+    if( existing !is null )
+        vars = existing;
+    else
+    {
+        auto bivars = new BuiltinVariables(existing);
+        auto bifunc = new BuiltinFunctions(bivars);
+        vars = new VariableStore(bifunc);
+    }
+
     scope eval = new AstEvalVisitor(&error, vars);
 
     bool flag = false;

@@ -8,12 +8,13 @@ module Cli;
 
 import eval.Eval;
 import eval.Repl;
+import eval.Variables;
 
 import tango.io.Stdout;
 
 void showHelp(char[] exec)
 {
-    Stdout.formatln("Usage: {} [--help] [FILE]", exec);
+    Stdout.formatln("Usage: {} [--help] [-i|--interactive] [FILE]", exec);
 }
 
 int main(char[][] rawArgs)
@@ -22,6 +23,7 @@ int main(char[][] rawArgs)
     auto args = rawArgs[1..$];
 
     char[] file;
+    bool forceInter = false;
 
     while( args.length > 0 )
     {
@@ -31,6 +33,10 @@ int main(char[][] rawArgs)
             case "--help":
                 showHelp(exec);
                 return 0;
+
+            case "-i": case "--interactive":
+                forceInter = true;
+                break;
 
             default:
                 if( arg.startsWith("-") )
@@ -48,13 +54,19 @@ int main(char[][] rawArgs)
         args = args[1..$];
     }
 
-    if( file == "" )
+    Variables existing;
+    bool result = false;
+
+    if( file != "" )
+        result = evalFile(file, null, existing);
+
+    if( file == "" || forceInter )
     {
-        startRepl;
-        return 0;
+        startRepl(existing);
+        result = true;
     }
-    else
-        return evalFile(file) ? 0 : 1;
+
+    return result ? 0 : 1;
 }
 
 bool startsWith(char[] s, char[] test)

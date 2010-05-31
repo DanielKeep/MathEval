@@ -22,6 +22,7 @@ import eval.Source;
 import eval.StructuredOutput;
 import eval.TokenStream;
 import eval.Value;
+import eval.Variables;
 import eval.VariableStore;
 
 private class Stop : Exception
@@ -29,7 +30,7 @@ private class Stop : Exception
     this() { super("STOP!"); }
 }
 
-void startRepl()
+Variables startRepl(Variables existing=null)
 {
     void prompt(size_t depth=0)
     {
@@ -64,9 +65,17 @@ void startRepl()
 
     char[] name = "stdin";
 
-    scope bivars = new BuiltinVariables;
-    scope bifunc = new BuiltinFunctions(bivars);
-    scope vars = new VariableStore(bifunc);
+    Variables vars;
+
+    if( existing !is null )
+        vars = existing;
+    else
+    {
+        auto bivars = new BuiltinVariables(existing);
+        auto bifunc = new BuiltinFunctions(bivars);
+        vars = new VariableStore(bifunc);
+    }
+
     scope eval = new AstEvalVisitor(&error, vars);
 
     Stdout
@@ -89,7 +98,11 @@ replLoop:
         {
             case ".c": case ".clear":
                 // HACK!
-                vars.vars = null;
+                if( auto vs = cast(VariableStore) vars )
+                    vs.vars = null;
+                else
+                    Stderr("error: cannot clear variables").newline.flush;
+
                 continue replLoop;
 
             case ".f": case ".funcs":
@@ -182,7 +195,7 @@ replLoop:
                 prompt(depth);
                 char[] nextLine;
                 if( ! Cin.readln(nextLine) )
-                    return;
+                    return vars;
                 src.reset(name, src.src ~ "\n" ~ nextLine);
                 scope lineSrc = new Source(name, nextLine, ++lineNum, 1);
                 scope lineTs = new TokenStream(lineSrc, &lexNext, &error);
@@ -214,6 +227,8 @@ replLoop:
         if( ! result.isNil )
             Stdout(result.toString).newline;
     }
+
+    return vars;
 }
 
 bool startsWith(char[] s, char[] test)
