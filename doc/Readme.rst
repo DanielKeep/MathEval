@@ -511,6 +511,9 @@ Name                    Description
 ``concat(s1,s2,...)``   Concatenates two or more sequences together.
 ``join(s,s1,s2,...)``   Concatenates two or more sequences together, placing
                         *s* between each argument.
+``split(a,s)``          Splits *s* once using *a*.  *a* may be of the same type
+                        as *s* or a function which takes a slice of *s* and
+                        returns *true* if a split should occur.
 ======================= =======================================================
 
 List

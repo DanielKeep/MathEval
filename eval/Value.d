@@ -303,6 +303,27 @@ version( MathEval_Lists )
             return r;
         }
 
+        static List opCall(Value[] vs...)
+        {
+            Node* head, tail;
+
+            foreach( v ; vs )
+            {
+                if( head is null )
+                    head = tail = new Node;
+                else
+                {
+                    tail.n = new Node;
+                    tail = tail.n;
+                }
+                tail.v = v;
+            }
+
+            List r;
+            r.head = head;
+            return r;
+        }
+
         bool opEquals(List rhs)
         {
             auto lhs = this;

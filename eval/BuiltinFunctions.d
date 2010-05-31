@@ -187,6 +187,7 @@ static this()
 
     fm["concat"]    = mk(&fnConcat, "s1", "s2", "...");
     fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
+    fm["split"]     = mk(&fnSplit, "a", "s");
 
     version( MathEval_Lists )
     {
@@ -735,6 +736,63 @@ version( MathEval_Lists )
     }
 
     ctx.err("join: cannot join {}", vs[0].tagName);
+}
+
+Value fnSplit(ref Context ctx)
+{
+    numArgs(ctx.err, "split", 2, ctx.args, false);
+    auto vs = new Value[](ctx.args);
+    unpackArgs(ctx.err, "split", vs, ctx.args, ctx.getArg);
+
+    if( vs[1].isString )
+    {
+        if( vs[0].isString )
+        {
+            auto s = vs[1].asString;
+            auto sep = vs[0].asString;
+            size_t off = 0;
+
+            while( s.length > sep.length )
+            {
+                if( s[0..sep.length] == sep )
+                    return Value(List(
+                        Value(vs[1].asString[0..off]),
+                        Value(s[sep.length..$])));
+                ++ off;
+                s = s[1..$];
+            }
+            return Value(List(vs[1], Value()));
+        }
+        else if( vs[0].isFunction )
+        {
+            auto s = vs[1].asString;
+            auto sep = vs[0].asFunction;
+            size_t off = 0;
+
+            while( s.length > 0 )
+            {
+                Value[1] argVs;
+                argVs[0] = Value(s);
+                auto lV = ctx.invoke(sep, argVs);
+                if( !lV.isLogical )
+                    ctx.err("split: expected logical result from "
+                            "split function, got {}", lV.tagName);
+                auto l = lV.asLogical;
+                if( l )
+                    return Value(List(
+                        Value(vs[1].asString[0..off]),
+                        Value(s)));
+                ++ off;
+                s = s[1..$];
+            }
+            return Value(List(vs[1], Value()));
+        }
+        else
+            ctx.err("split: expected string or function for argument 0, "
+                    "got {}", vs[0].tagName);
+    }
+
+    ctx.err("split: cannot split {}", vs[1].tagName);
 }
 
 // Lists
