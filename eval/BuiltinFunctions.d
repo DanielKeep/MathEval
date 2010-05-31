@@ -136,6 +136,7 @@ static this()
     {
         fm["bind"]      = mk(&fnBind, "binding", "...", "a");
         fm["cond"]      = mk(&fnCond, "cond", "...");
+        fm["case"]      = mk(&fnCase, "case", "a", "case", "...");
     }
 
     fm["abs"]       = mk(&fnAbs, "x");
@@ -414,9 +415,9 @@ version( MathEval_Lists )
 
     Value fnCond(ref Context ctx)
     {
-        numArgs(ctx.err, "cond", 2, ctx.args, false);
+        numArgs(ctx.err, "cond", 1, ctx.args, false);
 
-        for( size_t i=0; i<ctx.args-1; ++i )
+        for( size_t i=0; i<ctx.args; ++i )
         {
             auto ast = cast(AstListExpr) ctx.getAst(i);
             if( ast is null || ast.elements.length != 2 )
@@ -425,6 +426,10 @@ version( MathEval_Lists )
 
             auto test = ast.elements[0];
             auto value = ast.elements[1];
+            auto valueKw = cast(AstVariableExpr) test;
+
+            if( i==ctx.args-1 && valueKw !is null && valueKw.ident == "else" )
+                return ctx.evalAst(value, null);
 
             auto testR = ctx.evalAst(test, null);
             if( ! testR.isLogical )
@@ -435,22 +440,36 @@ version( MathEval_Lists )
                 return ctx.evalAst(value, null);
         }
 
+        return Value();
+    }
+
+    Value fnCase(ref Context ctx)
+    {
+        numArgs(ctx.err, "case", 3, ctx.args, false);
+
+        auto match = ctx.getArg(0);
+
+        for( size_t i=1; i<ctx.args; ++i )
         {
-            auto i = ctx.args-1;
             auto ast = cast(AstListExpr) ctx.getAst(i);
             if( ast is null || ast.elements.length != 2 )
-                ctx.err("cond: expected list literal with two elements "
+                ctx.err("case: expected list literal with two elements "
                         "for argument {}", i+1);
 
-            auto test = cast(AstVariableExpr) ast.elements[0];
+            auto test = ast.elements[0];
             auto value = ast.elements[1];
+            auto elseKw = cast(AstVariableExpr) test;
 
-            if( test is null || test.ident != "else" )
-                ctx.err("cond: expected 'else' for condition "
-                        "of argument {}", i);
+            if( i==ctx.args-1 && elseKw !is null && elseKw.ident == "else" )
+                return ctx.evalAst(value, null);
 
-            return ctx.evalAst(value, null);
+            auto testV = ctx.evalAst(test, null);
+
+            if( match == testV )
+                return ctx.evalAst(value, null);
         }
+
+        return Value();
     }
 }
 
@@ -617,7 +636,7 @@ version( MathEval_Lists )
         auto li = new Value.ListNode;
         li.v = new Value;
         *li.v = vs[0];
-        li.n = vs[1].asList;
+        li.n = vs[1].asList.head;
 
         return Value(li);
     }
@@ -629,7 +648,7 @@ version( MathEval_Lists )
         unpackArgs(ctx.err, "head", vs, ctx.args, ctx.getArg);
         expList(ctx.err, "head", vs[0], 0);
 
-        return *vs[0].asList.v;
+        return *vs[0].asList.head.v;
     }
     
     Value fnTail(ref Context ctx)
@@ -639,7 +658,7 @@ version( MathEval_Lists )
         unpackArgs(ctx.err, "head", vs, ctx.args, ctx.getArg);
         expList(ctx.err, "head", vs[0], 0);
 
-        return Value(vs[0].asList.n);
+        return Value(vs[0].asList.head.n);
     }
 
     Value fnMap_(ref Context ctx)
@@ -651,7 +670,7 @@ version( MathEval_Lists )
         expList(ctx.err, "map", vs[1], 1);
 
         auto fv = vs[0].asFunction;
-        auto li = vs[1].asList;
+        auto li = vs[1].asList.head;
 
         Value.ListNode* head, tail;
 
@@ -685,7 +704,7 @@ version( MathEval_Lists )
         expList(ctx.err, "filter", vs[1], 1);
 
         auto fv = vs[0].asFunction;
-        auto li = vs[1].asList;
+        auto li = vs[1].asList.head;
 
         Value.ListNode* head, tail;
 
@@ -728,7 +747,7 @@ version( MathEval_Lists )
         expList(ctx.err, "apply", vs[1], 1);
 
         auto fv = vs[0].asFunction;
-        auto li = vs[1].asList;
+        auto li = vs[1].asList.head;
 
         Value[] argVals;
 

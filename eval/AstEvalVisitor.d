@@ -572,8 +572,13 @@ Value binCmp(OpErr err, Value lhs, Value rhs, Cmp cmp)
         return Value((act & cmp) != Cmp.Nothing);
     }
     else
-        err("invalid types for comparison: {} and {}",
-                lhs.tagName, rhs.tagName);
+    {
+        bool eq = (lhs == rhs);
+        Cmp act;
+        act |= (!eq) ? Cmp.Ne : Cmp.Nothing;
+        act |= ( eq) ? Cmp.Eq : Cmp.Nothing;
+        return Value((act & cmp) != Cmp.Nothing);
+    }
 }
 
 Value binAdd(OpErr err, Value lhs, Value rhs)

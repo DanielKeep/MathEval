@@ -33,11 +33,44 @@ struct Value
     }
 
     version( MathEval_Lists )
+    {
+        struct ListHead
+        {
+            ListNode* head;
+
+            static ListHead opCall(ListNode* head)
+            {
+                ListHead r;
+                r.head = head;
+                return r;
+            }
+
+            bool opEquals(ListHead rhs)
+            {
+                auto lhs = this;
+
+                auto lhsN = lhs.head;
+                auto rhsN = rhs.head;
+
+                while( lhsN !is null && rhsN !is null )
+                {
+                    if( (*lhsN.v) != (*rhsN.v) )
+                        return false;
+
+                    lhsN = lhsN.n;
+                    rhsN = rhsN.n;
+                }
+
+                return (lhsN is null && rhsN is null);
+            }
+        }
+
         struct ListNode
         {
             Value* v;
             ListNode* n;
         }
+    }
 
     union Data
     {
@@ -47,7 +80,7 @@ struct Value
         Function f;
 
         version( MathEval_Lists )
-            ListNode* li;
+            ListHead li;
     }
 
     Tag tag;
@@ -91,13 +124,23 @@ struct Value
     }
 
     version( MathEval_Lists )
-        static Value opCall(ListNode* v)
+    {
+        static Value opCall(ListHead v)
         {
             Value r;
             r.tag = Tag.List;
             r.data.li = v;
             return r;
         }
+
+        static Value opCall(ListNode* v)
+        {
+            Value r;
+            r.tag = Tag.List;
+            r.data.li.head = v;
+            return r;
+        }
+    }
 
     bool isNil()
     {
@@ -155,7 +198,7 @@ struct Value
     }
 
     version( MathEval_Lists )
-        ListNode* asList()
+        ListHead asList()
         {
             assert( tag == Tag.List );
             return data.li;
@@ -191,7 +234,7 @@ struct Value
             case Tag.List:
             {
                 char[] s;
-                auto n = asList;
+                auto n = asList.head;
                 while( n !is null )
                 {
                     if( s != "" )
@@ -203,6 +246,27 @@ struct Value
             }
         }
             default:            return "<<unknown("~to!(char[])(tag)~")>>";
+        }
+    }
+
+    bool opEquals(ref Value rhs)
+    {
+        auto lhs = this;
+
+        if( lhs.tag != rhs.tag ) return false;
+
+        switch( tag )
+        {
+            case Tag.Nil:       return true;
+            case Tag.Logical:   return lhs.data.l == rhs.data.l;
+            case Tag.Real:      return lhs.data.r == rhs.data.r;
+            case Tag.String:    return lhs.data.s == rhs.data.s;
+            case Tag.Function:  return lhs.data.f is rhs.data.f;
+        version( MathEval_Lists )
+        {
+            case Tag.List:      return lhs.data.li == rhs.data.li;
+        }
+            default:            assert(false);
         }
     }
 }
@@ -236,6 +300,12 @@ class Function
     NativeFn nativeFn;
     Value[char[]] upvalues;
     Function nextFn;
+
+    bool opEquals(Function rhs)
+    {
+        auto lhs = this;
+        return (lhs == rhs) ? 1 : 0;
+    }
 
     Function dup()
     {
