@@ -14,6 +14,7 @@ import eval.Variables;
 version( MathEval_Lists )
     import eval.Ast : AstListExpr;
 
+import tango.io.Console : Cin;
 import tango.io.Stdout;
 import tango.math.ErrorFunction;
 import tango.math.Math;
@@ -182,6 +183,7 @@ static this()
 
     fm["print"]     = mk(&fnPrint, "a", "...");
     fm["printLn"]   = mk(&fnPrintLn, "a", "...");
+    fm["readLn"]    = mk(&fnReadLn);
 
     fm["concat"]    = mk(&fnConcat, "s1", "s2", "...");
     fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
@@ -986,6 +988,16 @@ Value fnPrintLn(ref Context ctx)
     fnPrint(ctx);
     Stdout.newline;
     return Value();
+}
+
+Value fnReadLn(ref Context ctx)
+{
+    numArgs(ctx.err, "readLn", 0, ctx.args);
+    char[] line;
+    if( ! Cin.readln(line) )
+        return Value();
+
+    return Value(line.dup);
 }
 
 // Meta

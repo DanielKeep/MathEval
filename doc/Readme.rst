@@ -535,8 +535,8 @@ Name                    Description
                         *li*.
 ======================= =======================================================
 
-Output
-------
+Input/Output
+------------
 
 ======================= =======================================================
 Name                    Description
@@ -544,6 +544,7 @@ Name                    Description
 ``print(a,...)``        Prints its arguments to the terminal.
 ``printLn(a,...)``      Prints its arguments to the terminal, adding a line
                         break at the end.
+``readLn()``            Reads a line of input and returns it as a string.
 ======================= =======================================================
 
 Types
