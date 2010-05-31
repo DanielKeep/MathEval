@@ -1,31 +1,25 @@
 
+"
+99 Bottles of Beer.
+"
+
 let beer(n) = do(
-    beerLine(n),
-    if( n>0, beer(n-1), nil )
-    )
+    bind(   [B, bottles(n, true)],
+            [b, bottles(n, false)],
+            [s, " on the wall"],
+            do( printLn(B,s,", ",b,"."),
+                if( n!=0,
+                    printLn("Take one down and pass it around, ",
+                            bottles(n-1,false),s),
+                    printLn("Go to the store and buy some more, ",
+                            bottles(99,false),s,".")
+                  ))),
+    if(n>0, do(printLn(""), beer(n-1)), nil))
 
-let beerLine(n) = bind(
-    [N', beerN(n, true)],
-    [n', beerN(n, false)],
-    [pl, pluralise(" bottle",n)],
-    print(concat(
-        N',pl," of beer on the wall, ",n',pl," of beer.\n",
-        if( n!=0,
-            concat("Take one down and pass it around, ",beerN(n-1,false),
-                pluralise(" bottle",n-1)," of beer on the wall.\n\n"),
-            concat("Go to the store and buy some more, ",beerN(99,false),
-                " bottles of beer on the wall.\n")
-          )
-        ))
-    )
-
-let beerN(n, capitalise) = (
-    if( n=0, if(capitalise, "No more", "no more"), string(n) )
-    )
-
-let pluralise(s, n) = (
-    if( n=1, s, concat(s,"s") )
-    )
+let bottles(n, cap) = concat(
+    if(n=0, if(cap,"No more","no more"), string(n)),
+    if(n=1, " bottle", " bottles"),
+    " of beer")
 
 beer(99)
 

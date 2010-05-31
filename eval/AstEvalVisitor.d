@@ -282,7 +282,7 @@ class AstEvalVisitor
         Value evalAst(AstExpr expr, Value[char[]] astLocals)
         {
             alias LocalVariables.AstEntry AstEntry;
-            scope newLocals = new LocalVariables(this, locals);
+            scope newLocals = new LocalVariables(this, vars);
             foreach( k,v ; astLocals )
             {
                 newLocals.vars[k] = AstEntry(null,null);

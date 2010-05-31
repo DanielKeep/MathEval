@@ -133,7 +133,10 @@ static this()
     fm["if"]        = mk(&fnIf, "l", "a", "b");
     fm["do"]        = mk(&fnDo, "a", "...");
     version( MathEval_Lists )
+    {
         fm["bind"]      = mk(&fnBind, "binding", "...", "a");
+        fm["cond"]      = mk(&fnCond, "cond", "...");
+    }
 
     fm["abs"]       = mk(&fnAbs, "x");
     fm["min"]       = mk(&fnMin, "x", "y", "...");
@@ -407,6 +410,47 @@ version( MathEval_Lists )
         }
 
         return ctx.evalAst(ctx.getAst(ctx.args-1), locals);
+    }
+
+    Value fnCond(ref Context ctx)
+    {
+        numArgs(ctx.err, "cond", 2, ctx.args, false);
+
+        for( size_t i=0; i<ctx.args-1; ++i )
+        {
+            auto ast = cast(AstListExpr) ctx.getAst(i);
+            if( ast is null || ast.elements.length != 2 )
+                ctx.err("cond: expected list literal with two elements "
+                        "for argument {}", i+1);
+
+            auto test = ast.elements[0];
+            auto value = ast.elements[1];
+
+            auto testR = ctx.evalAst(test, null);
+            if( ! testR.isLogical )
+                ctx.err("cond: expected logical result for condition of "
+                        "argument {}, got {}", i+1, testR.tagName);
+
+            if( testR.asLogical )
+                return ctx.evalAst(value, null);
+        }
+
+        {
+            auto i = ctx.args-1;
+            auto ast = cast(AstListExpr) ctx.getAst(i);
+            if( ast is null || ast.elements.length != 2 )
+                ctx.err("cond: expected list literal with two elements "
+                        "for argument {}", i+1);
+
+            auto test = cast(AstVariableExpr) ast.elements[0];
+            auto value = ast.elements[1];
+
+            if( test is null || test.ident != "else" )
+                ctx.err("cond: expected 'else' for condition "
+                        "of argument {}", i);
+
+            return ctx.evalAst(value, null);
+        }
     }
 }
 
