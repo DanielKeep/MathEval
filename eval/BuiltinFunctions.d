@@ -583,43 +583,151 @@ Value fnPoisson(ref Context ctx)
     return Value(poisson(λ, min, max));
 }
 
-// String
+// Sequence
 
 Value fnConcat(ref Context ctx)
 {
     numArgs(ctx.err, "concat", 2, ctx.args, false);
+    auto vs = new Value[](ctx.args);
+    unpackArgs(ctx.err, "concat", vs, ctx.args, ctx.getArg);
 
-    char[] s;
-
-    for( size_t i=0; i<ctx.args; ++i )
+    if( vs[0].isString )
     {
-        auto arg = ctx.getArg(i);
-        expString(ctx.err, "concat", arg, i);
-        s ~= arg.asString;
-    }
+        expString(ctx.err, "concat", vs[1..$], 1);
 
-    return Value(s);
+        size_t len = 0;
+
+        foreach( arg ; vs )
+            len += arg.asString.length;
+
+        auto r = new char[](len);
+        size_t offset = 0;
+
+        foreach( arg ; vs )
+        {
+            auto s = arg.asString;
+            r[offset..offset+s.length] = s;
+            offset += s.length;
+        }
+
+        return Value(r);
+    }
+    else if( vs[0].isList )
+    {
+        expList(ctx.err, "concat", vs[1..$], 1);
+
+        Value.ListNode* head, tail;
+
+        foreach( arg ; vs )
+        {
+            auto li = arg.asList.head;
+
+            while( li !is null )
+            {
+                if( head is null )
+                {
+                    head = tail = new Value.ListNode;
+                }
+                else
+                {
+                    tail.n = new Value.ListNode;
+                    tail = tail.n;
+                }
+                tail.v = new Value;
+                *tail.v = *li.v;
+
+                li = li.n;
+            }
+        }
+
+        return Value(head);
+    }
+    else
+        ctx.err("concat: cannot concatenate {}", vs[0].tagName);
 }
 
 Value fnJoin(ref Context ctx)
 {
     numArgs(ctx.err, "join", 3, ctx.args, false);
+    auto vs = new Value[](ctx.args);
+    unpackArgs(ctx.err, "join", vs, ctx.args, ctx.getArg);
 
-    auto sepV = ctx.getArg(0); expString(ctx.err, "join", sepV, 0);
-    auto sep = sepV.asString;
-    auto part0V = ctx.getArg(1); expString(ctx.err, "join", sepV, 1);
-    auto part0 = part0V.asString;
-
-    auto s = part0;
-    for( size_t i=2; i<ctx.args; ++i )
+    if( vs[0].isString )
     {
-        auto part = ctx.getArg(i);
-        expString(ctx.err, "join", part, i);
-        s ~= sep;
-        s ~= part.asString;
-    }
+        expString(ctx.err, "join", vs[1..$], 1);
 
-    return Value(s);
+        auto sep = vs[0].asString;
+
+        size_t len = sep.length * vs[1..$].length-1;
+        foreach( arg ; vs[1..$] )
+            len += arg.asString.length;
+
+        auto r = new char[](len);
+        size_t offset = 0;
+
+        foreach( i, arg ; vs[1..$] )
+        {
+            auto s = arg.asString;
+            if( i > 0 )
+            {
+                r[offset..offset+sep.length] = sep;
+                offset += sep.length;
+            }
+            r[offset..offset+s.length] = s;
+            offset += s.length;
+        }
+
+        return Value(r);
+    }
+    else if( vs[0].isList )
+    {
+        expList(ctx.err, "join", vs[1..$], 1);
+
+        auto sep = vs[0].asList;
+
+        Value.ListNode* head, tail;
+
+        foreach( i, arg ; vs[1..$] )
+        {
+            if( i > 0 )
+            {
+                auto li = sep.head;
+                while( li !is null )
+                {
+                    if( head is null )
+                        head = tail = new Value.ListNode;
+                    else
+                    {
+                        tail.n = new Value.ListNode;
+                        tail = tail.n;
+                    }
+                    tail.v = new Value;
+                    *tail.v = *li.v;
+                    li = li.n;
+                }
+            }
+
+            auto li = arg.asList.head;
+
+            while( li !is null )
+            {
+                if( head is null )
+                    head = tail = new Value.ListNode;
+                else
+                {
+                    tail.n = new Value.ListNode;
+                    tail = tail.n;
+                }
+                tail.v = new Value;
+                *tail.v = *li.v;
+                li = li.n;
+            }
+        }
+
+        return Value(head);
+    }
+    else
+        ctx.err("join: cannot join {}", vs[0].tagName);
 }
 
 // Lists
