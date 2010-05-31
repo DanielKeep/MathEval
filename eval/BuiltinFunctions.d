@@ -1055,7 +1055,7 @@ Value fnReal(ref Context ctx)
         {
             uint ate;
             auto v = Float.parse(arg.asString, &ate);
-            if( ate == 0 )
+            if( ate == 0 || ate < arg.asString.length )
                 ctx.err("real: invalid {}", arg.toString);
             return Value(v);
         }
