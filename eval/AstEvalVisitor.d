@@ -294,19 +294,21 @@ class AstEvalVisitor
                         (fv.args.length == 1) ? "" : "s",
                         args.length);
 
-            scope locals = new LocalVariables(this, globals);
+            scope newLocals = new LocalVariables(this, globals);
+
+            alias LocalVariables.AstEntry AstEntry;
 
             foreach( name, value ; fv.upvalues )
             {
                 // Cheat.  Quite a bit.
-                locals.vars[name] = null;
-                locals.vals[name] = value;
+                newLocals.vars[name] = AstEntry(null,null);
+                newLocals.vals[name] = value;
             }
 
             foreach( i, arg ; fv.args )
-                locals.vars[arg.name] = args[i];
+                newLocals.vars[arg.name] = AstEntry(args[i],locals);
 
-            withLocals(locals,
+            withLocals(newLocals,
             {
                 r = visitBase(fv.expr);
             });
@@ -368,9 +370,23 @@ class AstValue : AstExpr
 
 class LocalVariables : Variables
 {
+    struct AstEntry
+    {
+        AstExpr expr;
+        LocalVariables ctx;
+
+        static AstEntry opCall(AstExpr expr, LocalVariables ctx=null)
+        {
+            AstEntry r;
+            r.expr = expr;
+            r.ctx = ctx;
+            return r;
+        }
+    }
+
     Variables next;
     AstEvalVisitor eval;
-    AstExpr[char[]] vars;
+    AstEntry[char[]] vars;
     Value[char[]] vals;
 
     this(AstEvalVisitor eval, Variables next = null)
@@ -381,16 +397,9 @@ class LocalVariables : Variables
 
     bool resolve(char[] ident, out Value value)
     {
-        auto ptr = ident in vars;
-        if( ptr !is null )
+        if( known(ident) )
         {
-            if( auto vptr = ident in vals )
-                value = *vptr;
-            else
-            {
-                value = eval.visitBase(*ptr);
-                vals[ident] = value;
-            }
+            value = getValue(ident);
             return true;
         }
         else
@@ -399,7 +408,7 @@ class LocalVariables : Variables
 
     bool define(char[] ident, ref Value value)
     {
-        if( ident in vars )
+        if( !!( ident in vars ) || !!( ident in vals ) )
             return false;
 
         return nextDefine(ident, value);
@@ -419,14 +428,7 @@ class LocalVariables : Variables
             while( names.length > 0 && names[0] < nextName )
             {
                 name = names[0];
-                if( auto vptr = name in vals )
-                    value = *vptr;
-                else
-                {
-                    value = eval.visitBase(vars[name]);
-                    vals[name] = value;
-                }
-                names = names[1..$];
+                value = getValue(name);
                 r = dg(name, value);
                 if( r != 0 )
                     return r;
@@ -443,20 +445,41 @@ class LocalVariables : Variables
         foreach( name ; names )
         {
             auto tmpN = name;
-            Value tmpV;
-            if( auto vptr = name in vals )
-                tmpV = *vptr;
-            else
-            {
-                tmpV = eval.visitBase(vars[name]);
-                vals[name] = tmpV;
-            }
+            Value tmpV = getValue(name);
             r = dg(tmpN, tmpV);
             if( r != 0 )
                 return r;
         }
 
         return r;
+    }
+
+    bool known(char[] ident)
+    {
+        return !!( ident in vars ) || !!( ident in vals );
+    }
+
+    Value getValue(char[] ident)
+    {
+        if( auto vptr = ident in vals )
+            return *vptr;
+        else
+        {
+            Value value;
+            auto astEntry = ident in vars;
+            assert( astEntry !is null );
+            if( astEntry.ctx !is null )
+            {
+                eval.withLocals(astEntry.ctx,
+                {
+                    value = eval.visitBase(astEntry.expr);
+                });
+            }
+            else
+                value = eval.visitBase(astEntry.expr);
+            vals[ident] = value;
+            return value;
+        }
     }
 
     bool nextResolve(char[] ident, out Value value)
