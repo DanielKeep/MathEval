@@ -211,6 +211,8 @@ class Function
 {
     alias void delegate(char[], ...) ErrDg;
     alias Value delegate(size_t) ArgDg;
+    alias AstExpr delegate(size_t) AstDg;
+    alias Value delegate(AstExpr, Value[char[]]) EvalAstDg;
     alias Value delegate(Function, Value[]) InvokeDg;
     alias Value function(ref Context) NativeFn;
 
@@ -220,6 +222,8 @@ class Function
         size_t args;
         ArgDg getArg;
         InvokeDg invoke;
+        AstDg getAst;
+        EvalAstDg evalAst;
     }
 
     struct Arg

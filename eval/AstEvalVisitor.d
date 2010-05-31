@@ -274,6 +274,28 @@ class AstEvalVisitor
             return doCall(loc, fv, argExprs);
         }
 
+        AstExpr getAst(size_t i)
+        {
+            return args[i];
+        }
+
+        Value evalAst(AstExpr expr, Value[char[]] astLocals)
+        {
+            alias LocalVariables.AstEntry AstEntry;
+            scope newLocals = new LocalVariables(this, globals);
+            foreach( k,v ; astLocals )
+            {
+                newLocals.vars[k] = AstEntry(null,null);
+                newLocals.vals[k] = v;
+            }
+            Value r;
+            withLocals(newLocals,
+            {
+                r = visitBase(expr);
+            });
+            return r;
+        }
+
         Value r;
 
         Function.Context ctx;
@@ -281,6 +303,8 @@ class AstEvalVisitor
         ctx.args = args.length;
         ctx.getArg = &getArg;
         ctx.invoke = &invoke;
+        ctx.getAst = &getAst;
+        ctx.evalAst = &evalAst;
 
         if( fv.nativeFn !is null )
             r = fv.nativeFn(ctx);
@@ -294,9 +318,8 @@ class AstEvalVisitor
                         (fv.args.length == 1) ? "" : "s",
                         args.length);
 
-            scope newLocals = new LocalVariables(this, globals);
-
             alias LocalVariables.AstEntry AstEntry;
+            scope newLocals = new LocalVariables(this, globals);
 
             foreach( name, value ; fv.upvalues )
             {
