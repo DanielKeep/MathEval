@@ -6,10 +6,13 @@
 */
 module eval.BuiltinFunctions;
 
-import eval.Ast : AstListExpr, AstVariableExpr;
+import eval.Ast : AstVariableExpr;
 import eval.Statistical : rand, uniformReal;
 import eval.Value;
 import eval.Variables;
+
+version( MathEval_Lists )
+    import eval.Ast : AstListExpr;
 
 import tango.io.Stdout;
 import tango.math.ErrorFunction;
@@ -612,7 +615,9 @@ Value fnConcat(ref Context ctx)
 
         return Value(r);
     }
-    else if( vs[0].isList )
+    
+version( MathEval_Lists )
+    if( vs[0].isList )
     {
         expList(ctx.err, "concat", vs[1..$], 1);
 
@@ -642,8 +647,8 @@ Value fnConcat(ref Context ctx)
 
         return Value(head);
     }
-    else
-        ctx.err("concat: cannot concatenate {}", vs[0].tagName);
+
+    ctx.err("concat: cannot concatenate {}", vs[0].tagName);
 }
 
 Value fnJoin(ref Context ctx)
@@ -679,7 +684,9 @@ Value fnJoin(ref Context ctx)
 
         return Value(r);
     }
-    else if( vs[0].isList )
+
+version( MathEval_Lists )
+    if( vs[0].isList )
     {
         expList(ctx.err, "join", vs[1..$], 1);
 
@@ -726,8 +733,8 @@ Value fnJoin(ref Context ctx)
 
         return Value(head);
     }
-    else
-        ctx.err("join: cannot join {}", vs[0].tagName);
+
+    ctx.err("join: cannot join {}", vs[0].tagName);
 }
 
 // Lists
@@ -1038,6 +1045,7 @@ Value fnString(ref Context ctx)
     {
         case Value.Tag.Logical:
         case Value.Tag.Real:
+
     version( MathEval_Lists )
     {
         case Value.Tag.List:
