@@ -411,6 +411,7 @@ Functions are defined using the following placeholder variables:
 * ``x``, ``y``, ``z`` - arbitrary real numbers.
 * ``l`` - a logical value.
 * ``s`` - a string.
+* ``f`` - a function.
 * ``li`` - a list.
 * ``...`` - indicates that the function takes "more of the same": an arbitrary
   number of additional parameters.
@@ -518,6 +519,7 @@ List
 ======================= =======================================================
 Name                    Description
 ======================= =======================================================
+``apply(f,li)``         Calls *f* with the contents of *li* as its arguments.
 ``cons(a,li)``          Constructs a new list with *a* in front of the
                         elements of *li*.
 ``head(li)``            Returns the first element of the list *li*.
