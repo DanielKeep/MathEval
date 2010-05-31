@@ -130,6 +130,7 @@ static this()
     alias fnMap fm;
 
     fm["if"]        = mk(&fnIf, "l", "a", "b");
+    fm["do"]        = mk(&fnDo, "a", "...");
 
     fm["abs"]       = mk(&fnAbs, "x");
     fm["min"]       = mk(&fnMin, "x", "y", "...");
@@ -368,6 +369,17 @@ Value fnIf(ref Context ctx)
         return ctx.getArg(1);
     else
         return ctx.getArg(2);
+}
+
+Value fnDo(ref Context ctx)
+{
+    numArgs(ctx.err, "do", 1, ctx.args, false);
+    Value lastVal;
+
+    for( size_t i=0; i<ctx.args; ++i )
+        lastVal = ctx.getArg(i);
+    
+    return lastVal;
 }
 
 // Math
