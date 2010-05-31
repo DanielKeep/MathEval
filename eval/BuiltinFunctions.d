@@ -6,6 +6,7 @@
 */
 module eval.BuiltinFunctions;
 
+import eval.Ast : AstListExpr, AstVariableExpr;
 import eval.Statistical : rand, uniformReal;
 import eval.Value;
 import eval.Variables;
@@ -131,6 +132,8 @@ static this()
 
     fm["if"]        = mk(&fnIf, "l", "a", "b");
     fm["do"]        = mk(&fnDo, "a", "...");
+    version( MathEval_Lists )
+        fm["bind"]      = mk(&fnBind, "binding", "...", "a");
 
     fm["abs"]       = mk(&fnAbs, "x");
     fm["min"]       = mk(&fnMin, "x", "y", "...");
@@ -254,7 +257,7 @@ version( MathEval_Lists )
 void numArgs(ErrDg err, char[] name, size_t exp, size_t args, bool exact=true)
 {
     if( args < exp )
-        err("{}: expected {}{}, got {}",
+        err("{}: expected {}{} arguments, got {}",
                 name, exp, (exact ? "" : " or more"), args);
 }
 
@@ -380,6 +383,31 @@ Value fnDo(ref Context ctx)
         lastVal = ctx.getArg(i);
     
     return lastVal;
+}
+
+version( MathEval_Lists )
+{
+    Value fnBind(ref Context ctx)
+    {
+        numArgs(ctx.err, "bind", 2, ctx.args, false);
+
+        Value[char[]] locals;
+
+        for( size_t i=0; i<ctx.args-1; ++i )
+        {
+            auto ast = cast(AstListExpr) ctx.getAst(i);
+            if( ast is null || ast.elements.length != 2 )
+                ctx.err("bind: expected list literal with two elements "
+                        "for argument {}", i+1);
+            auto var = cast(AstVariableExpr) ast.elements[0];
+            if( var is null )
+                ctx.err("bind: expected variable name in argument {}", i+1);
+
+            locals[var.ident] = ctx.evalAst(ast.elements[1], null);
+        }
+
+        return ctx.evalAst(ctx.getAst(ctx.args-1), locals);
+    }
 }
 
 // Math
