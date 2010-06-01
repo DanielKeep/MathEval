@@ -75,7 +75,7 @@ final class Source
         if( src.length > 0 )
             do
             {
-                size_t ate;
+                uint ate;
                 r = Utf.decode(src, ate);
                 src = src[ate..$];
             }
@@ -96,7 +96,7 @@ final class Source
         auto src = this.src[mark.offset..$];
         while( n --> 0 && src.length > 0 )
         {
-            size_t ate;
+            uint ate;
             Utf.decode(src, ate);
             src = src[ate..$];
             len += ate;
@@ -130,7 +130,7 @@ final class Source
 
         while( n --> 0 && src.length > 0 )
         {
-            size_t ate;
+            uint ate;
             auto cp = Utf.decode(src, ate);
             src = src[ate..$];
             bytes += ate;
