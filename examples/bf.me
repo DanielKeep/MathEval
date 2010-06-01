@@ -10,12 +10,6 @@ No, it's not entirely compliant yet.  Working on it...
 
 
 
-" Don't have a getch function yet. "
-let readByte = readLn.real
-
-" Don't have a putch function either. "
-"let printByte = printLn"
-
 let repeat(a,n) = if( n > 1,
     cons(a, repeat(a,n-1)),
     [a] )

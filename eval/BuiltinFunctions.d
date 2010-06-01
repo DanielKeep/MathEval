@@ -1211,7 +1211,9 @@ Value fnReadByte(ref Context ctx)
 {
     numArgs(ctx.err, "readByte", 0, ctx.args);
     ubyte[1] inp;
-    if( Cin.input.read(inp[]) == 0 )
+    //Cin.stream.flush;
+    auto read = Cin.stream.read(inp[]);
+    if( read == ~0 )
         return Value();
     else
         return Value(inp[0]);
