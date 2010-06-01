@@ -73,8 +73,8 @@ let bfi(i,p,d,m,st,sd) = cond(
             [p+1, d, m, cons(p+1, st), sd],
             [p+1, d, m, st, sd+1] )],
         ["]", if( getNth(d,m) > 0,
-            [head(sd), d, m, st, sd],
-            [p+1, d, m, st, tail(sd)] )]
+            [head(st), d, m, st, sd],
+            [p+1, d, m, tail(st), sd] )]
         )]
     )
 
@@ -86,7 +86,7 @@ let decNth(d,m) = if( d > 0,
     cons(head(m), decNth(d-1, tail(m))),
     cons((head(m)-1) mod 256, tail(m)) )
 
-let outNth(d,m) = printByte(nth(d,m))
+let outNth(d,m) = do(printByte(nth(d,m)),m)
 
 let inpNth(d,m) = if( d > 0,
     cons(head(m), inpNth(d-1, tail(m))),
