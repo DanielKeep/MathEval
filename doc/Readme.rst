@@ -30,10 +30,6 @@ list of all the commands it understands.
 Secondly, the REPL allows you to re-define variables; you cannot normally do
 this.
 
-Thirdly, the REPL does not support sub-expression line continuations.  This
-will be explained later; suffice to say that each line must contain a complete
-statement or expression.
-
 The Language
 ============
 
@@ -56,13 +52,40 @@ Expressions
 
 Expressions in math eval are built out of the following constructs:
 
-* `Number Expressions`_,
-* `Sub-Expressions`_,
-* `Binary Expressions`_,
-* `Unary Expressions`_,
 * `Function Expressions`_,
+* `Number Expressions`_,
+* `String Expressions`_,
+* `List Expressions`_,
+* `Lambda Expressions`_,
+* `Sub-Expressions`_,
+* `Unary Expressions`_,
+* `Binary Expressions`_,
 * `Variable Expressions`_ and
 * `Uniform Expressions`_.
+
+Function Expressions
+````````````````````
+
+Functions in math eval can be invoked using standard mathematical notation.
+For example, to compute the sine of 1.6::
+
+    sin(1.6)
+
+If a function accepts multiple arguments, each argument is separated by a
+comma.  For example::
+
+    min(1.4, 7.3)
+
+You can also place a number literal immediately before a function call; this
+will be interpreted as an implicit multiplication.  For example::
+
+    3cos(pi/3)
+
+This is equivalent to::
+
+    3*cos(pi/3)
+
+For a complete list of supported functions, see `Functions`_.
 
 Number Expressions
 ``````````````````
@@ -137,6 +160,49 @@ Escape          Meaning
 
 Again, you will quite likely never, ever need these.
 
+List Expressions
+````````````````
+
+**Note**: Lists may not be available.
+
+Lists are ordered sequences of values.  They are written between square
+brackets with a comma between each element like so::
+
+    [1, 2, 3]
+
+The empty list is written thus::
+
+    []
+
+Lists can contain any value including other lists.  This can be used to build
+complex structures::
+
+    [[1,"one"],[2,"two"],[3,"other"]]
+
+Lists are an optional feature and may not be available.
+
+Lambda Expressions
+``````````````````
+
+A lambda is the literal form of a function.  For example::
+
+    \x:2x
+
+The above represents a function with a single argument that returns its
+argument doubled.  You can also have multiple arguments::
+
+    \x,y,z: x+y*z
+
+Or no arguments::
+
+    \: 42
+
+Since function application binds more tightly than lambda expressions, if you
+wish to invoke a lambda directly, you need to surround the lambda in
+parentheses::
+
+    (\x:2x)(4)
+
 Sub-Expressions
 ```````````````
 
@@ -163,16 +229,6 @@ Or::
 
 Note that this does not apply in the REPL.
 
-Binary Expressions
-``````````````````
-
-Math eval supports the standard notation for infix binary operations.  For
-example::
-
-    1 + 2*3
-
-For a complete list of binary operators, see `Binary Operators`_.
-
 Unary Expressions
 `````````````````
 
@@ -183,29 +239,15 @@ argument.  For example::
 
 For a complete list of unary operators, see `Unary Operators`_.
 
-Function Expressions
-````````````````````
+Binary Expressions
+``````````````````
 
-Functions in math eval can be invoked using standard mathematical notation.
-For example, to compute the sine of 1.6::
+Math eval supports the standard notation for infix binary operations.  For
+example::
 
-    sin(1.6)
+    1 + 2*3
 
-If a function accepts multiple arguments, each argument is separated by a
-comma.  For example::
-
-    min(1.4, 7.3)
-
-You can also place a number literal immediately before a function call; this
-will be interpreted as an implicit multiplication.  For example::
-
-    3cos(pi/3)
-
-This is equivalent to::
-
-    3*cos(pi/3)
-
-For a complete list of supported functions, see `Functions`_.
+For a complete list of binary operators, see `Binary Operators`_.
 
 Variable Expressions
 ````````````````````
@@ -260,6 +302,10 @@ digits and primes (\ ``'``\ ) but cannot *start* with them.  For example::
 
     let a = 42
     let a' = 1/a
+
+You may also use ``let`` to define a function::
+
+    let area(r) = pi*r**2
 
 Note that you cannot re-define variables once defined.
 
