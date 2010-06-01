@@ -19,6 +19,7 @@ import tango.io.Stdout;
 import tango.math.ErrorFunction;
 import tango.math.Math;
 import tango.math.Probability;
+import tango.util.Convert : to;
 
 class BuiltinFunctions : Variables
 {
@@ -138,6 +139,7 @@ static this()
     fm["do"]        = mk(&fnDo, "a", "...");
     version( MathEval_Lists )
     {
+        fm["tramp"]     = mk(&fnTramp, "f", "li");
         fm["bind"]      = mk(&fnBind, "binding", "...", "a");
         fm["cond"]      = mk(&fnCond, "cond", "...");
         fm["case"]      = mk(&fnCase, "case", "a", "case", "...");
@@ -189,6 +191,9 @@ static this()
     fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
     version( MathEval_Lists )
         fm["split"]     = mk(&fnSplit, "a", "s");
+
+    fm["slice"]     = mk(&fnSlice, "s", "i", "j");
+    fm["length"]    = mk(&fnLength, "s");
 
     version( MathEval_Lists )
     {
@@ -400,6 +405,37 @@ Value fnDo(ref Context ctx)
 
 version( MathEval_Lists )
 {
+    Value fnTramp(ref Context ctx)
+    {
+        numArgs(ctx.err, "tramp", 2, ctx.args);
+        Value[2] vs;
+        unpackArgs(ctx.err, "tramp", vs, ctx.args, ctx.getArg);
+
+        auto fv = vs[0];
+        auto liv = vs[1];
+
+        while( ! fv.isNil )
+        {
+            expFunction(ctx.err, "tramp", fv, 0);
+            expList(ctx.err, "tramp", liv, 1);
+
+            auto rliv = ctx.invoke(fv.asFunction, liv.asList.toValues);
+            if( !rliv.isList )
+                ctx.err("tramp: expected list result, got {}", rliv.tagName);
+
+            auto rli = rliv.asList;
+
+            if( rli.length != 2 )
+                ctx.err("tramp: expected list of two elements, got {}",
+                        rli.length);
+
+            fv = rli.head.v;
+            liv = rli.head.n.v;
+        }
+
+        return liv;
+    }
+
     Value fnBind(ref Context ctx)
     {
         numArgs(ctx.err, "bind", 2, ctx.args, false);
@@ -843,6 +879,33 @@ version( MathEval_Lists )
 
         ctx.err("split: cannot split {}", vs[1].tagName);
     }
+
+// Strings
+
+Value fnLength(ref Context ctx)
+{
+    numArgs(ctx.err, "length", 1, ctx.args);
+    Value[1] vs;
+    unpackArgs(ctx.err, "length", vs, ctx.args, ctx.getArg);
+    expString(ctx.err, "length", vs[0], 0);
+
+    return Value(to!(real)(vs[0].asString.length));
+}
+
+Value fnSlice(ref Context ctx)
+{
+    numArgs(ctx.err, "slice", 3, ctx.args);
+    Value[3] vs;
+    unpackArgs(ctx.err, "slice", vs, ctx.args, ctx.getArg);
+    expString(ctx.err, "slice", vs[0], 0);
+    expReal(ctx.err, "slice", vs[1..$], 1);
+
+    auto s = vs[0].asString;
+    size_t i = vs[1].asIndex,
+           j = vs[2].asIndex;
+
+    return Value(s[i..j]);
+}
 
 // Lists
 

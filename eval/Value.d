@@ -330,6 +330,16 @@ version( MathEval_Lists )
             return r;
         }
 
+        Value[] toValues()
+        {
+            Value[] vs;
+
+            foreach( n ; *this )
+                vs ~= n.v;
+            
+            return vs;
+        }
+
         bool opEquals(List rhs)
         {
             auto lhs = this;
