@@ -598,7 +598,9 @@ String
 ======================= =======================================================
 Name                    Description
 ======================= =======================================================
-``slice(s,i,j)``        TODO.
+``slice(s,i,j)``        Returns a slice of the given string starting at the
+                        *i*\ th index, ending before and not including the
+                        *j*\ th.
 ======================= =======================================================
 
 List
@@ -633,6 +635,8 @@ Input/Output
 Name                    Description
 ======================= =======================================================
 ``print(a,...)``        Prints its arguments to the terminal.
+``printByte(n)``        Prints an integer between 0 and 255 inclusive as an
+                        ASCII character.
 ``printLn(a,...)``      Prints its arguments to the terminal, adding a line
                         break at the end.
 ``readLn()``            Reads a line of input and returns it as a string.

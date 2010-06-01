@@ -14,7 +14,7 @@ No, it's not entirely compliant yet.  Working on it...
 let readByte = readLn.real
 
 " Don't have a putch function either. "
-let printByte = printLn
+"let printByte = printLn"
 
 let repeat(a,n) = if( n > 1,
     cons(a, repeat(a,n-1)),
@@ -90,7 +90,7 @@ let outNth(d,m) = do(printByte(nth(d,m)),m)
 
 let inpNth(d,m) = if( d > 0,
     cons(head(m), inpNth(d-1, tail(m))),
-    cons((readByte() mod 256), tail(m)) )
+    cons((trunc(readByte()) mod 256), tail(m)) )
 
 let getNth = nth
 

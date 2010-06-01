@@ -14,7 +14,7 @@ import eval.Variables;
 version( MathEval_Lists )
     import eval.Ast : AstListExpr;
 
-import tango.io.Console : Cin;
+import tango.io.Console : Cin, Cout;
 import tango.io.Stdout;
 import tango.math.ErrorFunction;
 import tango.math.Math;
@@ -185,7 +185,9 @@ static this()
 
     fm["print"]     = mk(&fnPrint, "a", "...");
     fm["printLn"]   = mk(&fnPrintLn, "a", "...");
+    fm["printByte"] = mk(&fnPrintByte, "n");
     fm["readLn"]    = mk(&fnReadLn);
+    fm["readByte"]  = mk(&fnReadByte);
 
     fm["concat"]    = mk(&fnConcat, "s1", "s2", "...");
     fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
@@ -1184,6 +1186,17 @@ Value fnPrintLn(ref Context ctx)
     return Value();
 }
 
+Value fnPrintByte(ref Context ctx)
+{
+    numArgs(ctx.err, "printByte", 1, ctx.args);
+    Value[1] vs;
+    unpackArgs(ctx.err, "printByte", vs, ctx.args, ctx.getArg);
+    expReal(ctx.err, "printByte", vs);
+
+    Stdout(cast(char)(to!(ubyte)(vs[0].asReal)));
+    return Value();
+}
+
 Value fnReadLn(ref Context ctx)
 {
     numArgs(ctx.err, "readLn", 0, ctx.args);
@@ -1192,6 +1205,16 @@ Value fnReadLn(ref Context ctx)
         return Value();
 
     return Value(line.dup);
+}
+
+Value fnReadByte(ref Context ctx)
+{
+    numArgs(ctx.err, "readByte", 0, ctx.args);
+    ubyte[1] inp;
+    if( Cin.input.read(inp[]) == 0 )
+        return Value();
+    else
+        return Value(inp[0]);
 }
 
 // Meta
