@@ -187,7 +187,8 @@ static this()
 
     fm["concat"]    = mk(&fnConcat, "s1", "s2", "...");
     fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
-    fm["split"]     = mk(&fnSplit, "a", "s");
+    version( MathEval_Lists )
+        fm["split"]     = mk(&fnSplit, "a", "s");
 
     version( MathEval_Lists )
     {
@@ -739,108 +740,109 @@ version( MathEval_Lists )
     ctx.err("join: cannot join {}", vs[0].tagName);
 }
 
-Value fnSplit(ref Context ctx)
-{
-    numArgs(ctx.err, "split", 2, ctx.args, false);
-    auto vs = new Value[](ctx.args);
-    unpackArgs(ctx.err, "split", vs, ctx.args, ctx.getArg);
-
-    if( vs[1].isString )
+version( MathEval_Lists )
+    Value fnSplit(ref Context ctx)
     {
-        if( vs[0].isString )
+        numArgs(ctx.err, "split", 2, ctx.args, false);
+        auto vs = new Value[](ctx.args);
+        unpackArgs(ctx.err, "split", vs, ctx.args, ctx.getArg);
+
+        if( vs[1].isString )
         {
-            auto s = vs[1].asString;
-            auto sep = vs[0].asString;
-            size_t off = 0;
-
-            while( s.length > sep.length )
+            if( vs[0].isString )
             {
-                if( s[0..sep.length] == sep )
-                    return Value(List(
-                        Value(vs[1].asString[0..off]),
-                        Value(s[sep.length..$])));
-                ++ off;
-                s = s[1..$];
-            }
-            return Value(List(vs[1], Value()));
-        }
-        else if( vs[0].isFunction )
-        {
-            auto s = vs[1].asString;
-            auto sep = vs[0].asFunction;
-            size_t off = 0;
+                auto s = vs[1].asString;
+                auto sep = vs[0].asString;
+                size_t off = 0;
 
-            while( s.length > 0 )
-            {
-                Value[1] argVs;
-                argVs[0] = Value(s);
-                auto lV = ctx.invoke(sep, argVs);
-                if( !lV.isLogical )
-                    ctx.err("split: expected logical result from "
-                            "split function, got {}", lV.tagName);
-                auto l = lV.asLogical;
-                if( l )
-                    return Value(List(
-                        Value(vs[1].asString[0..off]),
-                        Value(s)));
-                ++ off;
-                s = s[1..$];
-            }
-            return Value(List(vs[1], Value()));
-        }
-        else
-            ctx.err("split: expected string or function for argument 0, "
-                    "got {}", vs[0].tagName);
-    }
-
-    if( vs[1].isList )
-    {
-        if( vs[0].isList )
-        {
-            auto li = vs[1].asList.head;
-            auto sep = vs[0].asList;
-
-            while( li !is null )
-            {
-                if( List(li).startsWith(sep) )
+                while( s.length > sep.length )
                 {
-                    auto head = vs[1].asList.split(li, sep.length);
-                    return Value(List(Value(head), Value(li)));
+                    if( s[0..sep.length] == sep )
+                        return Value(List(
+                            Value(vs[1].asString[0..off]),
+                            Value(s[sep.length..$])));
+                    ++ off;
+                    s = s[1..$];
                 }
-                li = li.n;
+                return Value(List(vs[1], Value()));
             }
-
-            return Value(List(vs[1], Value()));
-        }
-        else if( vs[0].isFunction )
-        {
-            auto li = vs[1].asList;
-            auto sep = vs[0].asFunction;
-
-            foreach( n ; li )
+            else if( vs[0].isFunction )
             {
-                Value[1] argVs;
-                argVs[0] = Value(n);
-                auto lV = ctx.invoke(sep, argVs);
-                if( !lV.isLogical )
-                    ctx.err("split: expected logical result from "
-                            "split function, got {}", lV.tagName);
-                auto l = lV.asLogical;
-                if( l )
-                    return Value(List(
-                        Value(li.split(n,0)),
-                        Value(n)));
+                auto s = vs[1].asString;
+                auto sep = vs[0].asFunction;
+                size_t off = 0;
+
+                while( s.length > 0 )
+                {
+                    Value[1] argVs;
+                    argVs[0] = Value(s);
+                    auto lV = ctx.invoke(sep, argVs);
+                    if( !lV.isLogical )
+                        ctx.err("split: expected logical result from "
+                                "split function, got {}", lV.tagName);
+                    auto l = lV.asLogical;
+                    if( l )
+                        return Value(List(
+                            Value(vs[1].asString[0..off]),
+                            Value(s)));
+                    ++ off;
+                    s = s[1..$];
+                }
+                return Value(List(vs[1], Value()));
             }
-
-            return Value(List(vs[1], Value()));
+            else
+                ctx.err("split: expected string or function for argument 0, "
+                        "got {}", vs[0].tagName);
         }
-        else
-            ctx.err("split: expected list or function for argument 0, "
-                    "got {}", vs[0].tagName);
-    }
 
-    ctx.err("split: cannot split {}", vs[1].tagName);
-}
+        if( vs[1].isList )
+        {
+            if( vs[0].isList )
+            {
+                auto li = vs[1].asList.head;
+                auto sep = vs[0].asList;
+
+                while( li !is null )
+                {
+                    if( List(li).startsWith(sep) )
+                    {
+                        auto head = vs[1].asList.split(li, sep.length);
+                        return Value(List(Value(head), Value(li)));
+                    }
+                    li = li.n;
+                }
+
+                return Value(List(vs[1], Value()));
+            }
+            else if( vs[0].isFunction )
+            {
+                auto li = vs[1].asList;
+                auto sep = vs[0].asFunction;
+
+                foreach( n ; li )
+                {
+                    Value[1] argVs;
+                    argVs[0] = Value(n);
+                    auto lV = ctx.invoke(sep, argVs);
+                    if( !lV.isLogical )
+                        ctx.err("split: expected logical result from "
+                                "split function, got {}", lV.tagName);
+                    auto l = lV.asLogical;
+                    if( l )
+                        return Value(List(
+                            Value(li.split(n,0)),
+                            Value(n)));
+                }
+
+                return Value(List(vs[1], Value()));
+            }
+            else
+                ctx.err("split: expected list or function for argument 0, "
+                        "got {}", vs[0].tagName);
+        }
+
+        ctx.err("split: cannot split {}", vs[1].tagName);
+    }
 
 // Lists
 
