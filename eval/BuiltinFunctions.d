@@ -197,6 +197,7 @@ static this()
         fm["nth"]   = mk(&fnNth, "n", "li");
         fm["map"]   = mk(&fnMap_, "f", "li");
         fm["filter"]= mk(&fnFilter, "f", "li");
+        fm["reduce"]= mk(&fnReduce, "f", "li");
         fm["apply"] = mk(&fnApply, "f", "li");
         fm["seq"]   = mk(&fnSeq, "a", "b", "c");
     }
@@ -976,6 +977,30 @@ version( MathEval_Lists )
         }
 
         return Value(head);
+    }
+
+    Value fnReduce(ref Context ctx)
+    {
+        numArgs(ctx.err, "filter", 2, ctx.args);
+        Value[2] vs;
+        unpackArgs(ctx.err, "filter", vs, ctx.args, ctx.getArg);
+        expFunction(ctx.err, "filter", vs[0], 0);
+        expList(ctx.err, "filter", vs[1], 1);
+
+        auto fv = vs[0].asFunction;
+        auto li = vs[1].asList;
+        
+        if( li.head is null )
+            return Value();
+        
+        Value[2] argVs;
+        argVs[0] = li.head.v;
+        foreach( n ; List(li.head.n) )
+        {
+            argVs[1] = n.v;
+            argVs[0] = ctx.invoke(fv, argVs);
+        }
+        return argVs[0];
     }
 
     Value fnApply(ref Context ctx)

@@ -580,6 +580,9 @@ Name                    Description
                         *f*.
 ``nth(n,li)``           Returns the *n*\ th element of the list.  Note that
                         this takes O(*n*) time.
+``reduce(f,li)``        Reduces *li* to a single value by computing
+                        *f*\ (*f*\ (*f*\ (*li*\ :sub:`0`, *li*\ :sub:`1`),
+                        *li*\ :sub:`2`), ...).
 ``tail(li)``            Returns everything after the first element of the list
                         *li*.
 ======================= =======================================================
