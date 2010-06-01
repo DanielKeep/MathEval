@@ -1,0 +1,106 @@
+
+"
+
+MathEval brainfuck interpreter.
+Written by: Daniel Keep <daniel.keep@gmail.com>
+
+No, it's not entirely compliant yet.  Working on it...
+
+"
+
+
+
+" Don't have a getch function yet. "
+let readByte = readLn.real
+
+" Don't have a putch function either. "
+let printByte = printLn
+
+let repeat(a,n) = if( n > 1,
+    cons(a, repeat(a,n-1)),
+    [a] )
+
+let memoryLen = 64
+
+let memoryInit = repeat(0, memoryLen)
+
+let bf(s) = tramp(bfl, [s,0,0,memoryInit,[],0])
+
+let bfl(s,p,d,m,st,sd) = if(p >= length(s),
+    [nil, m],
+    [bfl, bind(
+        [i, slice(s,p,p+1)],
+        bind(
+            [r, bfi(i,p,d,m,st,sd)],
+            cons(s, r)
+            )
+        )]
+    )
+
+"
+Interpret a single brainfuck instruction.  Everything after the initial i
+argument are passed back out as the result.  They are:
+
+d
+ Data pointer.
+
+p
+ Instruction pointer.
+
+m
+ Memory.  Must be at least memoryLen long.
+
+st
+ Looping stack.
+
+sd
+ Skip depth; used to skip over loops.
+"
+let bfi(i,p,d,m,st,sd) = cond(
+    [sd>0, case(i,
+        ["[", [p+1, d, m, st, sd+1]],
+        ["]", [p+1, d, m, st, sd-1]],
+        [else,[p+1, d, m, st, sd]]
+        )],
+    [else, case(i,
+        [">", [p+1, d+1 mod memoryLen, m, st, sd]],
+        ["<", [p+1, d-1 mod memoryLen, m, st, sd]],
+        ["+", [p+1, d, incNth(d,m), st, sd]],
+        ["-", [p+1, d, decNth(d,m), st, sd]],
+        [".", [p+1, d, outNth(d,m), st, sd]],
+        [",", [p+1, d, inpNth(d,m), st, sd]],
+        ["[", if( getNth(d,m) > 0,
+            [p+1, d, m, cons(p+1, st), sd],
+            [p+1, d, m, st, sd+1] )],
+        ["]", if( getNth(d,m) > 0,
+            [head(sd), d, m, st, sd],
+            [p+1, d, m, st, tail(sd)] )]
+        )]
+    )
+
+let incNth(d,m) = if( d > 0,
+    cons(head(m), incNth(d-1, tail(m))),
+    cons((head(m)+1) mod 256, tail(m)) )
+
+let decNth(d,m) = if( d > 0,
+    cons(head(m), decNth(d-1, tail(m))),
+    cons((head(m)-1) mod 256, tail(m)) )
+
+let outNth(d,m) = printByte(nth(d,m))
+
+let inpNth(d,m) = if( d > 0,
+    cons(head(m), inpNth(d-1, tail(m))),
+    cons((readByte() mod 256), tail(m)) )
+
+let getNth = nth
+
+let main() = do(
+    print("bf code: "),
+    bind(
+        [m, bf(readLn())],
+        printLn("Contents of memory: ",m)
+        )
+    )
+
+main()
+
