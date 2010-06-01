@@ -342,6 +342,96 @@ version( MathEval_Lists )
 
             return (lhsN is null && rhsN is null);
         }
+
+        bool startsWith(List test)
+        {
+            auto lhsN = this.head;
+            auto rhsN = test.head;
+
+            while( lhsN !is null && rhsN !is null )
+            {
+                if( lhsN.v != rhsN.v )
+                    return false;
+
+                lhsN = lhsN.n;
+                rhsN = rhsN.n;
+            }
+
+            return (rhsN is null);
+        }
+
+        size_t length()
+        {
+            auto n = this.head;
+            size_t len = 0;
+            while( n !is null )
+            {
+                ++ len;
+                n = n.n;
+            }
+            return len;
+        }
+
+        List split(ref Node* splitN, size_t drop)
+        {
+            Appender newHead;
+            foreach( n ; *this )
+            {
+                if( n is splitN )
+                {
+                    // Let's DO dis
+                    while( drop > 0 )
+                    {
+                        splitN = splitN.n;
+                        -- drop;
+                    }
+                    return newHead.toList;
+                }
+                newHead ~= n.v;
+            }
+            assert(false);
+        }
+
+        int opApply(int delegate(ref Node*) dg)
+        {
+            int r = 0;
+            auto n = head;
+            while( n !is null )
+            {
+                r = dg(n);
+                if( r ) break;
+                n = n.n;
+            }
+            return r;
+        }
+
+        struct Appender
+        {
+            Node* head, tail;
+
+            List toList()
+            {
+                return List(head);
+            }
+
+            void opCatAssign(Node* n)
+            {
+                if( head is null )
+                    head = tail = n;
+                else
+                {
+                    tail.n = n;
+                    tail = n;
+                }
+            }
+
+            void opCatAssign(Value v)
+            {
+                auto n = new Node;
+                n.v = v;
+                (*this) ~= n;
+            }
+        }
     }
 }
 

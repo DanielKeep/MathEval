@@ -792,6 +792,52 @@ Value fnSplit(ref Context ctx)
                     "got {}", vs[0].tagName);
     }
 
+    if( vs[1].isList )
+    {
+        if( vs[0].isList )
+        {
+            auto li = vs[1].asList.head;
+            auto sep = vs[0].asList;
+
+            while( li !is null )
+            {
+                if( List(li).startsWith(sep) )
+                {
+                    auto head = vs[1].asList.split(li, sep.length);
+                    return Value(List(Value(head), Value(li)));
+                }
+                li = li.n;
+            }
+
+            return Value(List(vs[1], Value()));
+        }
+        else if( vs[0].isFunction )
+        {
+            auto li = vs[1].asList;
+            auto sep = vs[0].asFunction;
+
+            foreach( n ; li )
+            {
+                Value[1] argVs;
+                argVs[0] = Value(n);
+                auto lV = ctx.invoke(sep, argVs);
+                if( !lV.isLogical )
+                    ctx.err("split: expected logical result from "
+                            "split function, got {}", lV.tagName);
+                auto l = lV.asLogical;
+                if( l )
+                    return Value(List(
+                        Value(li.split(n,0)),
+                        Value(n)));
+            }
+
+            return Value(List(vs[1], Value()));
+        }
+        else
+            ctx.err("split: expected list or function for argument 0, "
+                    "got {}", vs[0].tagName);
+    }
+
     ctx.err("split: cannot split {}", vs[1].tagName);
 }
 
