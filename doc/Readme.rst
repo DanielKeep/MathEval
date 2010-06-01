@@ -541,6 +541,36 @@ Control Flow
 =================== ===========================================================
 Name                Description
 =================== ===========================================================
+``bind(...,a)``     Creates a number of local variable bindings and then
+                    evaluates *a* and returns its value.  Each binding is
+                    written as [*v*, *expr*] where *v* is the variable name,
+                    and *expr* its value.  For example::
+
+                        bind( [a, 6], [b, 7], a*b )
+
+                    Would result in 42.
+``case(a,...)``     Matches its first argument against a number of rules and
+                    returns the result of the associated expression.
+                    Each rule is written as [*m*, *expr*] where *m* is the
+                    value to match against and *expr* is the expression to
+                    evaluate.  For example::
+
+                        case(1, [0, "foo"], [1, "bar"], [else, "?"])
+
+                    Would result in "bar".  Note that in the last rule, *else*
+                    can be used to match anything.
+``cond(...)``       Attempts to match a sequence of rules, returning the
+                    result of the associated expression.  Each rule is written
+                    as [*m*, *expr*] where *m* is a logical-yielding expression
+                    and *expr* is the expression to evaluate.  For example::
+
+                        cond([pi<3, "foo"], [pi=3, "bar"],
+                             [pi>3, "qux"], [else, "?"])
+                    
+                    Would result in "qux".  Note that in the last rule, *else*
+                    can be used to match anything.
+``do(a,...)``       Forcibly evaluates its arguments in strict left-to-right
+                    order.
 ``if(l,a,b)``       Returns *a* if *l* is true, *b* otherwise.  Note
                     that this function is *lazy*; that is, it does not
                     evaluate a parameter unless it is used.
