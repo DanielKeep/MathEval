@@ -12,11 +12,6 @@ import eval.Variables;
 
 import tango.io.Stdout;
 
-void showHelp(char[] exec)
-{
-    Stdout.formatln("Usage: {} [--help] [-i|--interactive] [FILE]", exec);
-}
-
 int main(char[][] rawArgs)
 {
     auto exec = rawArgs[0];
@@ -32,6 +27,10 @@ int main(char[][] rawArgs)
         {
             case "--help":
                 showHelp(exec);
+                return 0;
+
+            case "--version":
+                showVersion();
                 return 0;
 
             case "-i": case "--interactive":
@@ -72,5 +71,67 @@ int main(char[][] rawArgs)
 bool startsWith(char[] s, char[] test)
 {
     return (s.length >= test.length && s[0..test.length] == test);
+}
+
+void showHelp(char[] exec)
+{
+    Stdout.formatln("Usage: {} [-i|--interactive] [--help] [--version] [FILE]", exec);
+}
+
+import GitVer;
+import tango.core.Version : Tango;
+
+const COPYRIGHT = "Copyright (c) 2010, Daniel Keep.";
+const TANGO_COPYRIGHT = "Portions copyright (c) 2004-2009, Tango contributors.";
+
+const LICENSE = cast(char[]) import("LICENSE");
+const TANGO_LICENSE = cast(char[]) import("TANGO_LICENSE");
+
+void showVersion()
+{
+    {
+        Stdout("MathEval REPL ");
+        if( GIT_COMMIT_TAG != "" )
+            Stdout(GIT_COMMIT_TAG);
+        else
+        {
+            Stdout("commit ")(GIT_COMMIT_HASH_ABBR);
+            if( GIT_COMMIT_BRANCH != "" )
+                Stdout(" (on ")(GIT_COMMIT_BRANCH)(")");
+        }
+        Stdout(" - ")(__DATE__);
+    
+        debug Stdout(" (debug build)");
+    
+        Stdout.newline;
+    }
+    {
+        Stdout("Compiled with ")(__VENDOR__)
+            (" ")(__VERSION__/1000)
+            (".").format("{,03:d}",__VERSION__%1000)
+            (" with Tango ")(Tango.Major)(".")(Tango.Minor).newline;
+    }
+    {
+        char[][] options;
+        version( MathEval_Lists )       options ~= "lists";
+
+        if( options.length > 0 )
+        {
+            Stdout("Options: ");
+            bool first = true;
+            if( options.length > 1 )
+                foreach( option ; options[0..$-1] )
+                {
+                    Stdout(first?"":", ")(option);
+                    first = false;
+                }
+            Stdout(first?"":" and ")(options[$-1])(".").newline;
+        }
+    }
+    Stdout.newline;
+    {
+        Stdout(COPYRIGHT).newline;
+        Stdout(TANGO_COPYRIGHT).newline;
+    }
 }
 

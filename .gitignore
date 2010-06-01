@@ -3,6 +3,8 @@
 /archives/
 
 /MathEval
+/GitVerGen
+/GitVer.d
 *.exe
 *.map
 *.html
