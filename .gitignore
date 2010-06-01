@@ -2,6 +2,7 @@
 /doc/
 /archives/
 
+/MathEval
 *.exe
 *.map
 *.html
