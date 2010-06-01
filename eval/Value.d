@@ -145,6 +145,12 @@ struct Value
         return data.r;
     }
 
+    size_t asIndex()
+    {
+        assert( tag == Tag.Real );
+        return to!(size_t)(data.r);
+    }
+
     char[] asString()
     {
         assert( tag == Tag.String );
