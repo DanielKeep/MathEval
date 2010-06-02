@@ -68,7 +68,8 @@ let bfi(i,p,d,m,st,sd) = cond(
             [p+1, d, m, st, sd+1] )],
         ["]", if( getNth(d,m) > 0,
             [head(st), d, m, st, sd],
-            [p+1, d, m, tail(st), sd] )]
+            [p+1, d, m, tail(st), sd] )],
+        [else,[p, d, m, st, sd]]
         )]
     )
 
