@@ -574,6 +574,25 @@ Name                Description
 ``if(l,a,b)``       Returns *a* if *l* is true, *b* otherwise.  Note
                     that this function is *lazy*; that is, it does not
                     evaluate a parameter unless it is used.
+``tramp(f,li)``     This is effectively equivalent to the following::
+
+                        bind([r, apply(f,li)],
+                             if(head(r) != nil,
+                                tramp(head(r), (tail.head)(r)),
+                                (tail.head)(r)))
+
+                    That is, it calls the function *f* with the contents of
+                    *li* as its arguments; it then calls the first element of
+                    the resulting list with the contents of the second element
+                    of the resulting list as its arguments.  It repeats this
+                    process until the first element of the returned list is
+                    *nil*, at which point it returns the second element.
+
+                    Note that unlike the above definition, *tramp* does not
+                    consume additional stack space upon each invocation; as
+                    such, it can safely be used for indefinite tail recursion,
+                    provided you do not construct the return function as a
+                    closure.
 =================== ===========================================================
 
 Sequence
