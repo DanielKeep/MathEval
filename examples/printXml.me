@@ -1,0 +1,75 @@
+
+let printXmlProlog() = do(
+    printLn("<?xml version=\"1.0\"?>")
+    )
+
+let printXmlNodes(nodes) = do(
+    map(printXmlNode, nodes),
+    nil
+    )
+
+let printXmlNode(node) = cond(
+    [type(node) = "string",
+        print(node)],
+    [type(node) = "real",
+        print(node)],
+    [type(node) = "logical",
+        print(node)],
+    [else,
+        case(nth(0,node),
+            ["--", print("<!-- ",nth(1,node)," -->")],
+            ["cdata", print("<![CDATA[",nth(1,node),"]]>")],
+            ["?", print("<?",nth(1,node)," ",nth(2,node),"?>")],
+            [else,
+                bind(
+                    [tagName, nth(0, node)],
+                    [attrs, nth(1, node)],
+                    [childNodes, (tail.tail)(node)],
+                    do( print("<"),
+                        print(tagName),
+                        printXmlAttrs(attrs),
+                        if( childNodes = [],
+                            print("/>"),
+                            do( print(">"),
+                                printXmlNodes(childNodes),
+                                print("</",tagName,">")
+                              )
+                          )
+                      )
+                    )
+                ]
+            )
+        ]
+    )
+
+let printXmlAttrs(attrs) = do(
+    if( attrs != nil, map(printXmlAttr, attrs), nil),
+    nil
+    )
+
+let printXmlAttr(attr) = bind(
+    [name, nth(0, attr)],
+    [value, nth(1, attr)],
+    do(
+        print(" ", name, "=\""),
+        printXmlAttrValue(value),
+        print("\"")
+      )
+    )
+    
+let printXmlAttrValue(value) = print(value)
+
+
+
+let xmlDom = ["data-set", nil,
+    ["init", nil,
+        ["startDate", nil, "00:00 1 Jan 2000"],
+        ["randSeed", nil, 0],
+        ["field", [["name","average-infectious-time"]], "24 hours"]
+        ],
+    ["--", "here's a comment!"],
+    ["cell", [["name","start"]]],
+    ["peep", [["location","start"]]]
+    ]
+
+
