@@ -108,7 +108,7 @@ void showVersion()
     {
         Stdout("Compiled with ")(__VENDOR__)
             (" ")(__VERSION__/1000)
-            (".").format("{,03:d}",__VERSION__%1000)
+            (".").format("{:d3}",__VERSION__%1000)
             (" with Tango ")(Tango.Major)(".")(Tango.Minor).newline;
     }
     {
