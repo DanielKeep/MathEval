@@ -368,12 +368,16 @@ version( MathEval_Lists )
         AstExpr[] elements;
 
         if( ts.peek.type != TOKrbracket )
-            while( true )
-            {
-                elements ~= parseExpr(ts);
-                if( ts.popExpectAny(TOKcomma, TOKrbracket).type == TOKrbracket )
-                    break;
-            }
+            ts.skipEolDo
+            ({
+                while( true )
+                {
+                    elements ~= parseExpr(ts);
+                    if( ts.popExpectAny(TOKcomma, TOKrbracket).type
+                            == TOKrbracket )
+                        break;
+                }
+            });
         else
             ts.popExpect(TOKrbracket);
 
