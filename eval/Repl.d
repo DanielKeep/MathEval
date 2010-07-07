@@ -90,7 +90,10 @@ replLoop:
         prompt;
         char[] line;
         if( ! Cin.readln(line) )
+        {
+            Stdout.newline;
             break replLoop;
+        }
 
         bool contLoop = false;
 
