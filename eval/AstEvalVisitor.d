@@ -12,6 +12,7 @@ import eval.Ast;
 import eval.ComplexCmp;
 import eval.Location;
 import eval.Statistical : uniformReal;
+import eval.Units;
 import eval.Value;
 import eval.Variables;
 
