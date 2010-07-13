@@ -441,12 +441,68 @@ Name            Meaning                 Value (to 19 decimal digits)
 ``false``       Contradiction           ⊥
 =============== ======================= ================================
 
+Additionally, the following are available when support for physical units has
+been enabled.  Note that, using implicit multiplication, you can write simple
+quantities such as ``4*m`` as ``4m``.  Also note that thanks to forced
+left-to-right evaluation, ``9.81m/s/s`` is always evaluated as ``9.81ms⁻²``.
+
+=========== =========== ============================
+Symbol      Name        Dimension
+=========== =========== ============================
+``m``       metre       length
+``g``       gram        mass
+``s``       second      time
+``A``       ampere      electric current
+``K``       kelvin      thermodynamic temperature
+``cd``      candela     luminous intensity
+``mol``     mole        amount of substance
+``rad``     radian      angle [*]_
+``sr``      steradian   solid angle [*]_
+``b``       bit         digital information [*]_
+=========== =========== ============================
+
+The following derived units are also available:
+
+=========== =========== ====================
+Symbol      Name        Derived Dimension
+=========== =========== ====================
+``Hz``      hertz       s⁻¹
+``N``       newton      g·m·s⁻² [*]_
+``Pa``      pascal      m⁻¹·g·s⁻²
+``J``       joule       m²·g·s⁻²
+``W``       watt        m²·g·s⁻³
+``C``       coulomb     s·A
+``V``       volt        m²·g·s⁻³·A⁻¹
+``F``       farad       m⁻²·g⁻¹·s⁴·A²
+``ohm``     ohm         m²∙kg∙s⁻³∙A⁻²
+``S``       siemens     m⁻²∙kg⁻¹∙s³∙A²
+``Wb``      weber       m²∙kg∙s⁻²∙A⁻¹
+``T``       tesla       g·s⁻²·A⁻¹
+``H``       henry       m²·g·s⁻²·A⁻²
+``lm``      lumen       cd·sr
+``lx``      lux         m⁻²·cd·sr
+``Bq``      becquerel   s⁻¹
+``Gy``      gray        m²∙s⁻²
+``Sv``      sievert     m²∙s⁻²
+``kat``     katal       s⁻¹·mol
+=========== =========== ====================
+
 .. [*]  Not-a-Number is a special value in computer hardware that is used to
         represent the result of undefined calculations.  For example,
         *sqrt*\ (-1), in contexts without imaginary numbers, evaluates to
         ``nan``.  As does *inf* − *inf*.
 
 .. [*]  Nil is used to represent the complete *absence* of a value.
+
+.. [*]  Radians are treated as an actual dimensional unit so that they can be
+        displayed.
+
+.. [*]  See explanation for radians above.
+
+.. [*]  Not a real SI unit, but useful none the less and it cannot be derived
+        from the base SI units.
+
+.. [*]  Note that grams is deliberately used instead of kilograms.
 
 Functions
 =========
@@ -459,6 +515,7 @@ Functions are defined using the following placeholder variables:
 * ``s`` - a string.
 * ``f`` - a function.
 * ``li`` - a list.
+* ``q`` - a physical quantity.
 * ``...`` - indicates that the function takes "more of the same": an arbitrary
   number of additional parameters.
 
@@ -646,6 +703,19 @@ Name                    Description
 ``tail(li)``            Returns everything after the first element of the list
                         *li*.
 ======================= =======================================================
+
+Units
+`````
+
+**Note**: Unit support may not be available.
+
+======================= =======================================================
+Name                    Description
+======================= =======================================================
+``stripUnits(q)``       Returns the quantity as a dimensionless value.
+``unitsOf(q)``          Returns the unit of the quantity.
+======================= =======================================================
+
 
 Input/Output
 ------------

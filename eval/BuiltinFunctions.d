@@ -210,6 +210,12 @@ static this()
         fm["seq"]   = mk(&fnSeq, "a", "b", "c");
     }
 
+    version( MathEval_Units )
+    {
+        fm["stripUnits"]    = mk(&fnStripUnits, "q");
+        fm["unitsOf"]       = mk(&fnUnitsOf, "q");
+    }
+
     fm["type"]      = mk(&fnType, "a");
     fm["logical"]   = mk(&fnLogical, "a");
     fm["real"]      = mk(&fnReal, "a");
@@ -270,6 +276,22 @@ version( MathEval_Lists )
     {
         if( !arg.isList )
             err("{}: expected list for argument {}, got {}",
+                    name, index+1, arg.tagName);
+    }
+}
+
+version( MathEval_Units )
+{
+    void expQuantity(ErrDg err, char[] name, Value[] args, size_t offset=0)
+    {
+        foreach( i, arg ; args )
+            expQuantity(err, name, arg, offset+i);
+    }
+
+    void expQuantity(ErrDg err, char[] name, Value arg, size_t index)
+    {
+        if( !arg.isQuantity )
+            err("{}: expected quantity for argument {}, got {}",
                     name, index+1, arg.tagName);
     }
 }
@@ -1155,6 +1177,29 @@ version( MathEval_Lists )
                 addValue(v);
 
         return Value(head);
+    }
+}
+
+version( MathEval_Units )
+{
+    Value fnStripUnits(ref Context ctx)
+    {
+        Value[1] vs;
+        unpackArgs(ctx.err, "stripUnits", vs, ctx.args, ctx.getArg);
+        expQuantity(ctx.err, "stripUnits", vs);
+
+        return Value(vs[0].asQuantity.mag);
+    }
+
+    Value fnUnitsOf(ref Context ctx)
+    {
+        Value[1] vs;
+        unpackArgs(ctx.err, "unitsOf", vs, ctx.args, ctx.getArg);
+        expQuantity(ctx.err, "unitsOf", vs);
+
+        auto q = vs[0].asQuantity;
+        q.mag = 1.0;
+        return Value(q);
     }
 }
 

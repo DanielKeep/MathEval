@@ -14,6 +14,9 @@ module eval.Value;
 import eval.Ast;
 import eval.Util : toStringLiteral;
 
+version( MathEval_Units )
+    import eval.Units : Quantity;
+
 import tango.util.Convert : to;
 import Float = tango.text.convert.Float;
 
@@ -30,6 +33,7 @@ struct Value
         String,
         Function,
         List,
+        Quantity,
     }
 
     union Data
@@ -41,6 +45,9 @@ struct Value
 
         version( MathEval_Lists )
             List li;
+
+        version( MathEval_Units )
+            Quantity q;
     }
 
     Tag tag;
@@ -102,6 +109,17 @@ struct Value
         }
     }
 
+    version( MathEval_Units )
+    {
+        static Value opCall(Quantity v)
+        {
+            Value r;
+            r.tag = Tag.Quantity;
+            r.data.q = v;
+            return r;
+        }
+    }
+
     bool isNil()
     {
         return tag == Tag.Nil;
@@ -131,6 +149,12 @@ struct Value
         bool isList()
         {
             return tag == Tag.List;
+        }
+
+    version( MathEval_Units )
+        bool isQuantity()
+        {
+            return tag == Tag.Quantity;
         }
 
     bool asLogical()
@@ -170,6 +194,13 @@ struct Value
             return data.li;
         }
 
+    version( MathEval_Units )
+        Quantity asQuantity()
+        {
+            assert( tag == Tag.Quantity );
+            return data.q;
+        }
+
     char[] tagName()
     {
         switch( tag )
@@ -180,6 +211,7 @@ struct Value
             case Tag.String:    return "string";
             case Tag.Function:  return "function";
             case Tag.List:      return "list";
+            case Tag.Quantity:  return "quantity";
             default:            return "unknown("~to!(char[])(tag)~")";
         }
     }
@@ -211,6 +243,15 @@ struct Value
                 return "["~s~"]";
             }
         }
+
+        version( MathEval_Units )
+        {
+            case Tag.Quantity:
+            {
+                return asQuantity.toString;
+            }
+        }
+
             default:            return "<<unknown("~to!(char[])(tag)~")>>";
         }
     }
@@ -231,6 +272,10 @@ struct Value
         version( MathEval_Lists )
         {
             case Tag.List:      return lhs.data.li == rhs.data.li;
+        }
+        version( MathEval_Units )
+        {
+            case Tag.Quantity:  return lhs.data.q == rhs.data.q;
         }
             default:            assert(false);
         }

@@ -105,6 +105,47 @@ private:
 Value[char[]] varMap;
 char[][] varNames;
 
+version( MathEval_Units )
+{
+    import eval.Units;
+
+    alias Dimension D;
+    alias DerivedDimension DD;
+    alias DerivedFrequency DF;
+
+    Value q(D d, byte e = 1)
+    {
+        byte[D.Max+1] dims;
+        dims[d] = e;
+        return Value(Quantity(1.0, Dimensions(dims)));
+    }
+
+    Value qc(byte[] dims...)
+    {
+        byte[D.Max+1] dims2;
+        dims2[0..dims.length] = dims;
+        return Value(Quantity(1.0, Dimensions(dims2)));
+    }
+
+    Value qd(D d, DD dd, byte e = 1, byte de = 1)
+    {
+        byte[D.Max+1] dims;
+        byte[DD.Max+1] ders;
+        dims[d] = e;
+        ders[dd] = de;
+        return Value(Quantity(1.0, Dimensions(dims, ders)));
+    }
+
+    Value qdf(DF df, byte fe = 1)
+    {
+        byte[D.Max+1] dims;
+        byte[DD.Max+1] ders;
+        dims[D.Time] = -fe;
+        ders[DD.Frequency] = fe;
+        return Value(Quantity(1.0, Dimensions(dims, ders, df)));
+    }
+}
+
 static this()
 {
     alias varMap vm;
@@ -119,6 +160,42 @@ static this()
     vm["nil"]   = Value();
     vm["true"]  = Value(true);
     vm["false"] = Value(false);
+
+    version( MathEval_Units )
+    {
+        vm["m"]     = q(D.Length);
+        vm["g"]     = q(D.Mass);
+        vm["s"]     = q(D.Time);
+        vm["A"]     = q(D.Current);
+        vm["K"]     = q(D.Temperature);
+        vm["cd"]    = q(D.Luminance);
+        vm["mol"]   = q(D.Substance);
+        vm["rad"]   = q(D.Angle);
+        vm["sr"]    = q(D.SolidAngle);
+        vm["b"]     = q(D.Storage);
+
+        //vm["C"]     = qd(D.Temperature, DD.Temperature);
+        vm["Hz"]    = qdf(DF.Hertz);
+        vm["Bq"]    = qdf(DF.Becquerel);
+
+        vm["N"]     = qc(1, 1, -2);
+        vm["Pa"]    = qc(-1, 1, -2);
+        vm["J"]     = qc(2, 1, -2);
+        vm["W"]     = qc(2, 1, -3);
+        vm["C"]     = qc(0, 0, 1, 1);
+        vm["V"]     = qc(2, 1, -3, -1);
+        vm["F"]     = qc(-2, -1, 4, 2);
+        vm["ohm"]   = qc(2, 1, -3, -2);
+        vm["S"]     = qc(-2, -1, 3, 2);
+        vm["Wb"]    = qc(2, 1, -2, -1);
+        vm["T"]     = qc(0, 1, -2, -1);
+        vm["H"]     = qc(2, 1, -2, -2);
+        vm["lm"]    = qc(0, 0, 0, 0, 0, 1, 0, 0, 1);
+        vm["lx"]    = qc(-2, 0, 0, 0, 0, 1, 0, 0, 1);
+        vm["Gy"]    = qc(2, 0, -2);
+        vm["Sv"]    = qc(2, 0, -2);
+        vm["kat"]   = qc(0, 0, -1, 0, 0, 0, 1);
+    }
 
     varNames = vm.keys;
     varNames.sort;

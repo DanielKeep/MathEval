@@ -9,6 +9,7 @@
 module eval.AstEvalVisitor;
 
 import eval.Ast;
+import eval.ComplexCmp;
 import eval.Location;
 import eval.Statistical : uniformReal;
 import eval.Value;
@@ -554,7 +555,7 @@ Value binCmp(OpErr err, Value lhs, Value rhs, Cmp cmp)
 
         return Value((act & cmp) != Cmp.Nothing);
     }
-    else if( lhs.isString && rhs.isString )
+    if( lhs.isString && rhs.isString )
     {
         auto l = lhs.asString;
         auto r = rhs.asString;
@@ -568,7 +569,21 @@ Value binCmp(OpErr err, Value lhs, Value rhs, Cmp cmp)
 
         return Value((act & cmp) != Cmp.Nothing);
     }
-    else
+
+    version( MathEval_Units )
+        if( lhs.isQuantity && rhs.isQuantity )
+        {
+            Cmp act;
+            alias ComplexCmp CC;
+            auto cr = lhs.data.q.opComplexCmp(rhs.data.q);
+            act |= (cr != CC.Eq) ? Cmp.Ne : Cmp.Nothing;
+            act |= (cr == CC.Lt) ? Cmp.Lt : Cmp.Nothing;
+            act |= (cr == CC.Eq) ? Cmp.Eq : Cmp.Nothing;
+            act |= (cr == CC.Gt) ? Cmp.Gt : Cmp.Nothing;
+
+            return Value((act & cmp) != Cmp.Nothing);
+        }
+
     {
         bool eq = (lhs == rhs);
         Cmp act;
@@ -582,30 +597,123 @@ Value binAdd(OpErr err, Value lhs, Value rhs)
 {
     if( lhs.isReal && rhs.isReal )
         return Value(lhs.asReal + rhs.asReal);
-    
-    else
-        err("invalid types for addition: {} and {}",
-                lhs.tagName, rhs.tagName);
+
+    version( MathEval_Units )
+    {
+        if( lhs.isQuantity )
+        {
+            auto lhsQ = lhs.asQuantity;
+
+            if( rhs.isQuantity )
+            {
+                auto rhsQ = rhs.asQuantity;
+                if( ! lhsQ.canAdd(rhsQ) )
+                    goto invalid;
+
+                return Value(lhsQ + rhsQ);
+            }
+
+            if( rhs.isReal && lhsQ.isDimensionless )
+                return Value(lhsQ + Quantity(rhs.asReal));
+
+            goto invalid;
+        }
+        
+        if( rhs.isQuantity )
+        {
+            auto rhsQ = rhs.asQuantity;
+
+            if( lhs.isReal && rhsQ.isDimensionless )
+                return Value(Quantity(lhs.asReal) + rhsQ);
+
+            goto invalid;
+        }
+    }
+
+invalid:
+    err("invalid types for addition: {} and {}",
+            lhs.tagName, rhs.tagName);
 }
 
 Value binSub(OpErr err, Value lhs, Value rhs)
 {
     if( lhs.isReal && rhs.isReal )
         return Value(lhs.asReal - rhs.asReal);
-    
-    else
-        err("invalid types for subtraction: {} and {}",
-                lhs.tagName, rhs.tagName);
+
+    version( MathEval_Units )
+    {
+        if( lhs.isQuantity )
+        {
+            auto lhsQ = lhs.asQuantity;
+
+            if( rhs.isQuantity )
+            {
+                auto rhsQ = rhs.asQuantity;
+                if( ! lhsQ.canAdd(rhsQ) )
+                    goto invalid;
+
+                return Value(lhsQ - rhsQ);
+            }
+
+            if( rhs.isReal && lhsQ.isDimensionless )
+                return Value(lhsQ - Quantity(rhs.asReal));
+
+            goto invalid;
+        }
+        
+        if( rhs.isQuantity )
+        {
+            auto rhsQ = rhs.asQuantity;
+
+            if( lhs.isReal && rhsQ.isDimensionless )
+                return Value(Quantity(lhs.asReal) - rhsQ);
+
+            goto invalid;
+        }
+    }
+
+invalid:
+    err("invalid types or units for subtraction: {} and {}",
+            lhs.tagName, rhs.tagName);
 }
 
 Value binMul(OpErr err, Value lhs, Value rhs)
 {
     if( lhs.isReal && rhs.isReal )
         return Value(lhs.asReal * rhs.asReal);
-    
-    else
-        err("invalid types for multiplication: {} and {}",
-                lhs.tagName, rhs.tagName);
+
+    version( MathEval_Units )
+    {
+        if( lhs.isQuantity )
+        {
+            auto lhsQ = lhs.asQuantity;
+
+            if( rhs.isQuantity )
+            {
+                auto rhsQ = rhs.asQuantity;
+                return Value(lhsQ * rhsQ);
+            }
+
+            if( rhs.isReal )
+                return Value(lhsQ * Quantity(rhs.asReal));
+
+            goto invalid;
+        }
+        
+        if( rhs.isQuantity )
+        {
+            auto rhsQ = rhs.asQuantity;
+
+            if( lhs.isReal )
+                return Value(Quantity(lhs.asReal) * rhsQ);
+
+            goto invalid;
+        }
+    }
+
+invalid:
+    err("invalid types for multiplication: {} and {}",
+            lhs.tagName, rhs.tagName);
 }
 
 Value binDiv(OpErr err, Value lhs, Value rhs)
@@ -613,9 +721,38 @@ Value binDiv(OpErr err, Value lhs, Value rhs)
     if( lhs.isReal && rhs.isReal )
         return Value(lhs.asReal / rhs.asReal);
     
-    else
-        err("invalid types for division: {} and {}",
-                lhs.tagName, rhs.tagName);
+    version( MathEval_Units )
+    {
+        if( lhs.isQuantity )
+        {
+            auto lhsQ = lhs.asQuantity;
+
+            if( rhs.isQuantity )
+            {
+                auto rhsQ = rhs.asQuantity;
+                return Value(lhsQ / rhsQ);
+            }
+
+            if( rhs.isReal )
+                return Value(lhsQ / Quantity(rhs.asReal));
+
+            goto invalid;
+        }
+        
+        if( rhs.isQuantity )
+        {
+            auto rhsQ = rhs.asQuantity;
+
+            if( lhs.isReal )
+                return Value(Quantity(lhs.asReal) / rhsQ);
+
+            goto invalid;
+        }
+    }
+
+invalid:
+    err("invalid types for division: {} and {}",
+            lhs.tagName, rhs.tagName);
 }
 
 Value binIntDiv(OpErr err, Value lhs, Value rhs)
@@ -722,8 +859,13 @@ Value unPos(OpErr err, Value val)
     if( val.isReal )
         return val;
 
-    else
-        err("invalid type for ensure positive: {}", val.tagName);
+    version( MathEval_Units )
+    {
+        if( val.isQuantity )
+            return val;
+    }
+
+    err("invalid type for ensure positive: {}", val.tagName);
 }
 
 Value unNeg(OpErr err, Value val)
@@ -731,8 +873,16 @@ Value unNeg(OpErr err, Value val)
     if( val.isReal )
         return Value(-val.asReal);
 
-    else
-        err("invalid type for negation: {}", val.tagName);
+    version( MathEval_Units )
+    {
+        if( val.isQuantity )
+        {
+            auto q = val.asQuantity;
+            return Value(Quantity(-q.mag, q.dims));
+        }
+    }
+
+    err("invalid type for negation: {}", val.tagName);
 }
 
 Value unNot(OpErr err, Value val)
