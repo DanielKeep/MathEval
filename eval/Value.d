@@ -290,6 +290,7 @@ class Function
     alias Value delegate(AstExpr, Value[char[]]) EvalAstDg;
     alias Value delegate(Function, Value[]) InvokeDg;
     alias Value function(ref Context) NativeFn;
+    alias Value delegate(ref Context) NativeDg;
 
     struct Context
     {
@@ -309,6 +310,7 @@ class Function
     Arg[] args;
     AstExpr expr;
     NativeFn nativeFn;
+    NativeDg nativeDg;
     Value[char[]] upvalues;
     Function nextFn;
 

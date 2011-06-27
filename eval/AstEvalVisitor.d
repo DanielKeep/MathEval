@@ -307,6 +307,8 @@ class AstEvalVisitor
 
         if( fv.nativeFn !is null )
             r = fv.nativeFn(ctx);
+        else if( fv.nativeDg !is null )
+            r = fv.nativeDg(ctx);
         else
         {
             assert( fv.expr !is null );
