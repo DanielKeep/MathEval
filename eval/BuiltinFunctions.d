@@ -190,7 +190,7 @@ static this()
     fm["readByte"]  = mk(&fnReadByte);
 
     fm["concat"]    = mk(&fnConcat, "s1", "s2", "...");
-    fm["join"]      = mk(&fnJoin, "s", "s1", "s2", "...");
+    fm["join"]      = mk(&fnJoin, "a", "...");
     version( MathEval_Lists )
         fm["split"]     = mk(&fnSplit, "a", "s");
 
@@ -718,7 +718,7 @@ version( MathEval_Lists )
 
 Value fnJoin(ref Context ctx)
 {
-    numArgs(ctx.err, "join", 3, ctx.args, false);
+    numArgs(ctx.err, "join", 1, ctx.args, false);
     auto vs = new Value[](ctx.args);
     unpackArgs(ctx.err, "join", vs, ctx.args, ctx.getArg);
 
@@ -732,13 +732,16 @@ Value fnJoin(ref Context ctx)
         foreach( arg ; vs[1..$] )
             len += arg.asString.length;
 
+        if( len == 0 )
+            return Value("");
+
         auto r = new char[](len);
         size_t offset = 0;
 
         foreach( i, arg ; vs[1..$] )
         {
             auto s = arg.asString;
-            if( i > 0 )
+            if( i > 0 && sep.length > 0 )
             {
                 r[offset..offset+sep.length] = sep;
                 offset += sep.length;
