@@ -728,7 +728,10 @@ Value fnJoin(ref Context ctx)
 
         auto sep = vs[0].asString;
 
-        size_t len = sep.length * vs[1..$].length-1;
+        if( vs[1..$].length == 0 )
+            return Value("");
+
+        size_t len = sep.length * (vs[1..$].length-1);
         foreach( arg ; vs[1..$] )
             len += arg.asString.length;
 
